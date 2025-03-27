@@ -68,8 +68,13 @@ export async function activate(context: vscode.ExtensionContext) {
     files,
   );
 
+  const assetPath = config.get<string>(
+    nameof(ExtensionConfig.prototype.assetPath),
+    defaultAssetPath,
+  );
+
   const assetFiles = loadAssetFiles(
-    workspaceFolder.uri.fsPath,
+    path.join(workspaceFolder.uri.fsPath, assetPath),
     defaultAssetPath,
   );
 

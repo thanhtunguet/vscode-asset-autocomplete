@@ -83,6 +83,11 @@
           "type": "string",
           "default": "assets/i18n",
           "description": "Path to the i18n JSON folder"
+        },
+        "i18n-autocomplete.assetPath": {
+          "type": "string",
+          "default": "assets",
+          "description": "Path to the asset folder"
         }
       }
     }
