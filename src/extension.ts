@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { exec, execSync } from 'child_process';
 
 const outputChannel = vscode.window.createOutputChannel("VSCode i18n autocomplete");
 let disposableProvider: vscode.Disposable | undefined;
@@ -11,17 +12,52 @@ function showLog(message: string) {
     outputChannel.show();
 }
 
+function execOnFolder(command: string, folder: string) {
+    try {
+        const result = execSync(command, {
+            cwd: folder,
+            encoding: 'utf-8'
+        });
+
+        outputChannel.appendLine(result);
+    } catch (error) {
+        if (error instanceof Error) {
+            showLog(`Error executing command: ${error.message}`);
+        } else {
+            showLog(`Unknown error occurred during command execution`);
+        }
+    }
+}
+
 export async function activate(context: vscode.ExtensionContext) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) {
         return;
     }
 
-    const dartAvailable = await vscode.languages.getLanguages().then(langs => langs.includes('dart'));
-    if (!dartAvailable) {
-        showLog("Dart language not available. Is the Dart extension installed and active?");
-        return;
-    }
+    context.subscriptions.push(
+        vscode.commands.registerCommand('i18n-autocomplete.l10nMerge', () => {
+            vscode.window.showInformationMessage("Localization keys merged");
+            /// Run command in current root folder of the workspace: dart run supa_l10n_manager merge
+            execOnFolder('dart run supa_l10n_manager merge', workspaceFolders[0].uri.fsPath);
+        }),
+
+        vscode.commands.registerCommand('i18n-autocomplete.l10nExtract', (locale: string) => {
+            vscode.window.showInformationMessage("Extracting localization keys...");
+            execOnFolder(`dart run supa_l10n_manager extract --locale ${locale}`, workspaceFolders[0].uri.fsPath);
+        }),
+
+        vscode.commands.registerCommand('i18n-autocomplete.l10nExtractVi', () => {
+            vscode.window.showInformationMessage("Extracting localization keys...");
+            execOnFolder(`dart run supa_l10n_manager extract --locale vi`, workspaceFolders[0].uri.fsPath);
+        }),
+
+        vscode.commands.registerCommand('i18n-autocomplete.l10nExtractEn', () => {
+            vscode.window.showInformationMessage("Extracting localization keys...");
+            execOnFolder(`dart run supa_l10n_manager extract --locale en`, workspaceFolders[0].uri.fsPath);
+        }),
+    );
+
 
     const config = vscode.workspace.getConfiguration('i18n-autocomplete');
     const i18nPathSetting = config.get<string>('jsonPath', 'assets/i18n');
@@ -41,7 +77,6 @@ export async function activate(context: vscode.ExtensionContext) {
         const files = fs.readdirSync(i18nPath).filter(file => file.endsWith('.json'));
 
         if (files.length === 0) {
-            showLog('There are no translation files in the directory: ' + i18nPath);
             return;
         }
 

@@ -16,7 +16,9 @@
   },
   "publisher": "thanhtunguet",
   "activationEvents": [
-    "onLanguage:dart"
+    "onLanguage:dart",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
   ],
   "private": false,
   "license": "MIT",
@@ -33,6 +35,24 @@
     "test": "vscode-test"
   },
   "contributes": {
+    "commands": [
+      {
+        "command": "i18n-autocomplete.l10nMerge",
+        "title": "l10n: Merge"
+      },
+      {
+        "command": "i18n-autocomplete.l10nExtract",
+        "title": "l10n: Extract"
+      },
+      {
+        "command": "i18n-autocomplete.l10nExtractVi",
+        "title": "l10n: Extract Vietnamese"
+      },
+      {
+        "command": "i18n-autocomplete.l10nExtractEn",
+        "title": "l10n: Extract English"
+      }
+    ],
     "languages": [
       {
         "id": "dart",
