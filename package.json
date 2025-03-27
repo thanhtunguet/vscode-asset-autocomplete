@@ -1,5 +1,5 @@
 {
-  "name": "vscode-i18n-autocomplete",
+  "name": "vscode-asset-autocomplete",
   "displayName": "vscode-i18n-autocomplete",
   "description": "VSCode extension for auto-completing translation keys from JSON",
   "version": "0.0.1",
@@ -7,11 +7,10 @@
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Programming Languages",
-    "Other"
+    "Programming Languages"
   ],
   "repository": {
-    "url": "https://github.com/thanhtunguet/vscode-i18n-autocomplete",
+    "url": "https://github.com/thanhtunguet/vscode-asset-autocomplete",
     "type": "git"
   },
   "publisher": "thanhtunguet",
@@ -51,6 +50,14 @@
       {
         "command": "i18n-autocomplete.l10nExtractEn",
         "title": "l10n: Extract English"
+      },
+      {
+        "command": "i18n-autocomplete.yarnExtract",
+        "title": "I18n: Yarn Extract"
+      },
+      {
+        "command": "i18n-autocomplete.yarnMerge",
+        "title": "I18n: Yarn Merge"
       }
     ],
     "languages": [

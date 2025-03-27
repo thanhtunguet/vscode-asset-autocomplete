@@ -1,65 +1,95 @@
-# VSCode Translation Autocomplete
+# VSCode Asset Autocomplete
 
-## Overview
-The **VSCode Translation Autocomplete** extension provides **auto-completion for translation keys** from JSON files located in `assets/i18n/*.json`. This extension helps developers working with localization files by suggesting available translation keys when using the `translate('key.namespace')` function in Dart files.
+**VSCode Asset Autocomplete** is a powerful extension that provides translation key suggestions and asset path completions for Flutter, React, and React Native projects. It also includes convenient commands to extract and merge localization files using your preferred tooling.
 
-## Features
-- 🔍 **Auto-complete translation keys** while typing inside `translate('...')`
-- 📂 **Reads translation keys from JSON files** in `assets/i18n/`
-- 📌 **Supports nested keys** for improved IDE auto-completion
-- 🚀 **Works automatically** when editing Dart files
+---
 
-## Installation
-1. Download and install **VSCode** if you haven't already.
-2. Install this extension manually (or publish and install from the VSCode Marketplace).
-3. Ensure your localization files are stored in `assets/i18n/*.json`.
+## ✨ Features
 
-## Usage
-1. Open a Dart file in your Flutter project.
-2. Start typing `translate('...')`, and **available translation keys** will be suggested.
-3. Select a key from the autocomplete suggestions to insert it into your code.
+### 🔤 Translation Key Suggestions
+- Autocomplete translation keys from your JSON i18n files.
+- Reverse-lookup suggestions from translation text.
+- Supports multi-level nested keys.
+- Language support:
+  - Dart (Flutter)
+  - JavaScript / TypeScript (React, React Native)
 
-## Configuration
-This extension looks for translation files in `assets/i18n/`. If your project structure is different, you can customize the JSON path in VSCode settings:
+### 🖼️ Asset Path Autocompletion
+- Provides completions for files in your asset folder:
+  - `assets/` for Flutter
+  - `src/assets/` for React/React Native
 
-1. Open **VSCode Settings** (`Cmd + ,` on macOS, `Ctrl + ,` on Windows/Linux).
-2. Search for `i18n-autocomplete.jsonPath`.
-3. Change the value to your custom path (e.g., `my_custom_folder/i18n`).
+### ⚙️ Quick Commands for i18n Management
 
-## Development
-### Prerequisites
-- Install **Node.js** and **npm**
-- Install VSCode Extension Generator:
-  ```sh
-  npm install -g yo generator-code
-  ```
+#### Flutter
+- `l10n: Extract` – run `dart run supa_l10n_manager extract`
+- `l10n: Extract Vietnamese` – `--locale vi`
+- `l10n: Extract English` – `--locale en`
+- `l10n: Merge` – run `dart run supa_l10n_manager merge`
 
-### Running Locally
-To run the extension in a development VSCode instance:
-```sh
-npm install
-npm run compile  # Only needed if using TypeScript
-code --extensionDevelopmentPath=.
+#### React / React Native
+- `I18n: Yarn Extract` – runs `yarn extract`  
+  _(Defined as: `react3l translate extract -i src/ -o src/locales/ -p src/locales/`)_
+- `I18n: Yarn Merge` – runs `yarn merge`  
+  _(Defined as: `react3l translate merge -i src/ -o src/locales/ -p src/locales/`)_
+
+---
+
+## ⚙️ Configuration
+
+Configure these settings in `.vscode/settings.json` or through the Settings UI:
+
+| Setting | Description | Default |
+|--------|-------------|---------|
+| `i18n-autocomplete.jsonPath` | Path to the i18n translation folder | `assets/i18n` |
+| `i18n-autocomplete.assetPath` | Path to your asset folder | `assets` |
+
+---
+
+## 🧠 Supported Languages
+
+- Dart (`.dart`)
+- JavaScript (`.js`, `.mjs`, `.jsx`)
+- TypeScript (`.ts`, `.tsx`)
+
+---
+
+## 💻 Commands
+
+| Command ID | Title |
+|------------|-------|
+| `i18n-autocomplete.l10nMerge` | l10n: Merge |
+| `i18n-autocomplete.l10nExtract` | l10n: Extract |
+| `i18n-autocomplete.l10nExtractVi` | l10n: Extract Vietnamese |
+| `i18n-autocomplete.l10nExtractEn` | l10n: Extract English |
+| `i18n-autocomplete.yarnExtract` | I18n: Yarn Extract |
+| `i18n-autocomplete.yarnMerge` | I18n: Yarn Merge |
+
+Use these commands via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+
+---
+
+## 🛠 Requirements
+
+- For Flutter projects: `supa_l10n_manager` must be available via Dart.
+- For React/React Native: The following scripts must be defined in `package.json`:
+
+```json
+"scripts": {
+  "extract": "react3l translate extract -i src/ -o src/locales/ -p src/locales/",
+  "merge": "react3l translate merge -i src/ -o src/locales/ -p src/locales/"
+}
 ```
 
-### Packaging & Publishing
-To package and publish the extension:
-```sh
-npm install -g vsce
-vsce package
-vsce publish
-```
+---
 
-## Known Issues
-- If JSON files contain errors, the extension may not load the keys correctly.
-- Ensure your `assets/i18n/` folder exists, or manually configure the path.
+## 📦 Installation
 
-## License
-MIT License
+Search for **"vscode-i18n-autocomplete"** in the Extensions Marketplace or install manually from VSIX.
 
-## Contributing
-Contributions are welcome! Feel free to open issues or submit pull requests.
+---
 
-## Contact
-For questions or suggestions, please open an issue on GitHub.
+## 🧪 Feedback / Contributions
 
+Contributions and feature requests are welcome!  
+Open an issue or PR on [GitHub](https://github.com/thanhtunguet/vscode-i18n-autocomplete).
