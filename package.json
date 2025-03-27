@@ -1,0 +1,85 @@
+{
+  "name": "vscode-i18n-autocomplete",
+  "displayName": "vscode-i18n-autocomplete",
+  "description": "VSCode extension for auto-completing translation keys from JSON",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "repository": {
+    "url": "https://github.com/thanhtunguet/vscode-i18n-autocomplete",
+    "type": "git"
+  },
+  "publisher": "thanhtunguet",
+  "activationEvents": [
+    "onLanguage:dart"
+  ],
+  "private": false,
+  "license": "MIT",
+  "main": "./dist/extension.js",
+  "scripts": {
+    "vscode:prepublish": "yarn run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "dart",
+        "extensions": [
+          ".dart"
+        ]
+      },
+      {
+        "id": "javascript",
+        "extensions": [
+          ".js",
+          ".mjs",
+          ".jsx"
+        ]
+      },
+      {
+        "id": "typescript",
+        "extensions": [
+          ".ts",
+          ".tsx"
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "I18n Autocomplete",
+      "properties": {
+        "i18n-autocomplete.jsonPath": {
+          "type": "string",
+          "default": "assets/i18n",
+          "description": "Path to the i18n JSON folder"
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.90.0",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.3.1",
+    "eslint": "^9.21.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
+  }
+}
