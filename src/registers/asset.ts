@@ -8,13 +8,13 @@ export function loadAssetFiles(
   subPath: string,
 ): string[] {
   const fullPath = path.join(workspaceFolder, subPath);
-  showLog(fullPath);
+
   const results: string[] = [];
 
   if (!fs.existsSync(fullPath)) {
     return results;
   }
 
-  traverseDirectory(fullPath, '', results);
+  traverseDirectory(fullPath, subPath, results);
   return results;
 }

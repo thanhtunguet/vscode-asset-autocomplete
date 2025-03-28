@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import {ASSET_REGEX, TRANSLATION_REGEX} from '../config/regex';
 
 export function createCompletionProvider(
   translationKeys: string[],
@@ -10,82 +11,88 @@ export function createCompletionProvider(
       document: vscode.TextDocument,
       position: vscode.Position,
     ): vscode.CompletionItem[] | undefined {
-      const line = document.lineAt(position);
-      let previousLine = position.line - 1;
-      const lineText = `${document.lineAt(previousLine).text}\n${line.text}`; // get the previous line and the current line
-
-      const matches = lineText.match(/translate\([\s\t\n]*['"]([^'"]*)['"]*/g);
-
       let suggestions: Array<vscode.CompletionItem> = [];
 
-      if (!matches) {
-        const assetMatches = /['"](assets\/.*)['"]/g;
-        if (assetMatches) {
-          const assetMatchedTexts = lineText
-            .split('\n')
-            .join(' ')
-            .match(/['"]assets\/(.*)['"]/);
-          if (assetMatchedTexts) {
-            const assetMatch = assetMatchedTexts[1];
-            suggestions = [
-              ...suggestions,
-              ...assetFiles
-                .filter((file) => {
-                  return file.startsWith(assetMatch);
-                })
-                .map((file) => {
-                  const item = new vscode.CompletionItem(
-                    file,
-                    vscode.CompletionItemKind.File,
-                  );
-                  item.insertText = `${file.replace(assetMatch, '')}`;
-                  return item;
-                }),
-            ];
-          }
+      const line = document.lineAt(position);
+      let lineText = line.text;
+
+      const assetMatches = lineText.match(ASSET_REGEX);
+
+      if (assetMatches) {
+        const assetMatch = assetMatches[1];
+
+        suggestions = [
+          ...suggestions,
+          ...assetFiles
+            .filter((file) => {
+              return file.includes(assetMatch);
+            })
+            .map((file) => {
+              const item = new vscode.CompletionItem(
+                file,
+                vscode.CompletionItemKind.File,
+              );
+              item.insertText = `${file.replace(assetMatch, '')}`;
+              return item;
+            }),
+        ];
+        return suggestions;
+      }
+
+      const previousLine = position.line - 1;
+      const previousLineText = document.lineAt(previousLine).text;
+      lineText = `${previousLineText} ${lineText}`;
+
+      const translationMatches = lineText.match(TRANSLATION_REGEX);
+
+      if (translationMatches) {
+        const openingQuote = translationMatches[2];
+        const translationKey = translationMatches[3];
+        let closeQuote = translationMatches[4];
+        if (closeQuote === '') {
+          closeQuote = openingQuote;
+        } else {
+          closeQuote = '';
         }
-      } else {
-        /// Get first group matched text by regex: /translate\([\s\t\n]*['"]([^'"]*)['"]*/g in line text
-        const translationMatches = matches[0].match(
-          /translate\([\s\t\n]*['"]([^'"]*)['"]*/,
-        );
 
-        if (translationMatches) {
-          const translationKey = translationMatches[1];
+        suggestions = [
+          ...suggestions,
+          ...translationKeys
+            .filter((key) => key.startsWith(translationKey))
+            .map((key) => {
+              const item = new vscode.CompletionItem(
+                key,
+                vscode.CompletionItemKind.Text,
+              );
+              item.insertText = `${key.replace(
+                translationKey,
+                '',
+              )}${closeQuote}`;
+              return item;
+            }),
+        ];
 
-          suggestions = [
-            ...suggestions,
-            ...translationKeys
-              .filter((key) => key.startsWith(translationKey))
-              .map((key) => {
-                const item = new vscode.CompletionItem(
-                  key,
-                  vscode.CompletionItemKind.Text,
-                );
-                item.insertText = `${key}`;
-                return item;
-              }),
-          ];
-
-          suggestions = [
-            ...suggestions,
-            ...reversedTranslationKeys
-              .filter((entry) => {
-                const [key] = Object.entries(entry)[0];
-                return key.startsWith(translationKey);
-              })
-              .map((entry) => {
-                const [key, value] = Object.entries(entry)[0];
-                const item = new vscode.CompletionItem(
-                  key,
-                  vscode.CompletionItemKind.Text,
-                );
-                item.insertText = `${value.replace(translationKey, '')}`;
-                item.label = `${key} (${value})`;
-                return item;
-              }),
-          ];
-        }
+        suggestions = [
+          ...suggestions,
+          ...reversedTranslationKeys
+            .filter((entry) => {
+              const [key] = Object.entries(entry)[0];
+              return key.startsWith(translationKey);
+            })
+            .map((entry) => {
+              const [key, value] = Object.entries(entry)[0];
+              const item = new vscode.CompletionItem(
+                key,
+                vscode.CompletionItemKind.Text,
+              );
+              item.insertText = `${value.replace(
+                translationKey,
+                '',
+              )}${closeQuote}`;
+              item.label = `${key} (${value})`;
+              return item;
+            }),
+        ];
       }
 
       return suggestions;

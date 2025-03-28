@@ -1,5 +1,5 @@
 export enum ProjectType {
-  Flutter = 'flutter',
-  NodeJS = 'node',
-  Unknown = 'unknown',
+  Flutter = 'Flutter',
+  NodeJS = 'Node',
+  Unknown = 'Unknown',
 }
