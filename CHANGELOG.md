@@ -4,6 +4,9 @@ All notable changes to the "vscode-i18n-autocomplete" extension will be document
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [v0.0.4]
 
-- Initial release
+- Asset autocompletions
+- Localization autocompletions
+- l10n commands: extract, merge, extract Vietnamese, mergeVietnamese
+- i18n commands: extract, merge

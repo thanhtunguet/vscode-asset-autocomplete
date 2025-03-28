@@ -38,30 +38,35 @@ export function createCompletionProvider(
                     file,
                     vscode.CompletionItemKind.File,
                   );
-                  item.insertText = `${file}`;
+                  item.insertText = `${file.replace(assetMatch, '')}`;
                   return item;
                 }),
             ];
           }
         }
       } else {
-        suggestions = [
-          ...suggestions,
-          ...translationKeys.map((key) => {
-            const item = new vscode.CompletionItem(
-              key,
-              vscode.CompletionItemKind.Text,
-            );
-            item.insertText = `${key}`;
-            return item;
-          }),
-        ];
         /// Get first group matched text by regex: /translate\([\s\t\n]*['"]([^'"]*)['"]*/g in line text
         const translationMatches = matches[0].match(
           /translate\([\s\t\n]*['"]([^'"]*)['"]*/,
         );
+
         if (translationMatches) {
           const translationKey = translationMatches[1];
+
+          suggestions = [
+            ...suggestions,
+            ...translationKeys
+              .filter((key) => key.startsWith(translationKey))
+              .map((key) => {
+                const item = new vscode.CompletionItem(
+                  key,
+                  vscode.CompletionItemKind.Text,
+                );
+                item.insertText = `${key}`;
+                return item;
+              }),
+          ];
+
           suggestions = [
             ...suggestions,
             ...reversedTranslationKeys
@@ -75,7 +80,7 @@ export function createCompletionProvider(
                   key,
                   vscode.CompletionItemKind.Text,
                 );
-                item.insertText = `${value}`;
+                item.insertText = `${value.replace(translationKey, '')}`;
                 item.label = `${key} (${value})`;
                 return item;
               }),
