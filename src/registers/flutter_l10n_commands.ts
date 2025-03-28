@@ -34,23 +34,24 @@ export function registerFlutterLocalizationCommands(
           `dart run supa_l10n_manager extract --locale ${locale}`,
           vscode.workspace.workspaceFolders?.[0].uri.fsPath || '',
         );
+        vscode.window.showInformationMessage(`${locale} keys extracted`);
       },
     ),
 
     vscode.commands.registerCommand('i18n-autocomplete.l10nExtractVi', () => {
-      vscode.window.showInformationMessage('Extracting localization keys...');
       execSyncOnFolder(
         `dart run supa_l10n_manager extract --locale vi`,
         workspaceFolder.uri.fsPath,
       );
+      vscode.window.showInformationMessage('Vietnamese keys extracted');
     }),
 
     vscode.commands.registerCommand('i18n-autocomplete.l10nExtractEn', () => {
-      vscode.window.showInformationMessage('Extracting localization keys...');
       execSyncOnFolder(
         `dart run supa_l10n_manager extract --locale en`,
         workspaceFolder.uri.fsPath,
       );
+      vscode.window.showInformationMessage('English keys extracted');
     }),
   );
 }

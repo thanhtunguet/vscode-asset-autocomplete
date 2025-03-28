@@ -32,7 +32,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const projectType = detectProjectType(workspaceFolder.uri.fsPath);
 
-  vscode.window.showInformationMessage(`Detected project type: ${projectType}`);
+  if (projectType !== ProjectType.Unknown) {
+    vscode.window.showInformationMessage(
+      `Detected project type: ${projectType}`,
+    );
+  }
 
   let defaultLocalizationPath: string;
   let defaultAssetPath: string;
@@ -84,8 +88,6 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   const assetFiles = loadAssetFiles(workspaceFolder.uri.fsPath, assetPath);
-
-  showLog('Asset files: ' + JSON.stringify(assetFiles, null, 2));
 
   // Register completion provider
   const completionProvider = createCompletionProvider(
