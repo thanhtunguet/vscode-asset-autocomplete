@@ -31,7 +31,7 @@ export function registerFlutterLocalizationCommands(
         }
 
         execSyncOnFolder(
-          `dart run supa_l10n_manager extract --locale ${locale}`,
+          `dart run supa_l10n_manager extract -r --locale ${locale}`,
           vscode.workspace.workspaceFolders?.[0].uri.fsPath || '',
         );
         vscode.window.showInformationMessage(`${locale} keys extracted`);
@@ -40,7 +40,7 @@ export function registerFlutterLocalizationCommands(
 
     vscode.commands.registerCommand('i18n-autocomplete.l10nExtractVi', () => {
       execSyncOnFolder(
-        `dart run supa_l10n_manager extract --locale vi`,
+        `dart run supa_l10n_manager extract --locale vi -r`,
         workspaceFolder.uri.fsPath,
       );
       vscode.window.showInformationMessage('Vietnamese keys extracted');
@@ -48,7 +48,15 @@ export function registerFlutterLocalizationCommands(
 
     vscode.commands.registerCommand('i18n-autocomplete.l10nExtractEn', () => {
       execSyncOnFolder(
-        `dart run supa_l10n_manager extract --locale en`,
+        `dart run supa_l10n_manager extract --locale en -r`,
+        workspaceFolder.uri.fsPath,
+      );
+      vscode.window.showInformationMessage('English keys extracted');
+    }),
+
+    vscode.commands.registerCommand('i18n-autocomplete.l10nReorder', () => {
+      execSyncOnFolder(
+        `dart run supa_l10n_manager reorder`,
         workspaceFolder.uri.fsPath,
       );
       vscode.window.showInformationMessage('English keys extracted');
