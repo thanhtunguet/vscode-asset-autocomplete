@@ -1,15 +1,19 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import {showLog} from './helpers/log';
-import {detectProjectType} from './helpers/project_type';
 import {loadAssetFiles} from './registers/asset';
 import {createCompletionProvider} from './registers/completion_provider';
 import {registerFlutterLocalizationCommands} from './registers/flutter_l10n_commands';
-import {loadTranslationKeys} from './registers/translation';
-import {ExtensionConfig} from './types/ExtensionConfig';
-import {ProjectType} from './types/ProjectType';
+import {loadTranslationKeys, getWorkspaceConfig} from './registers/translation';
 import {registerYarnI18NCommands} from './registers/yarn_i18n_commands';
+import {BehaviorSubject} from 'rxjs';
+
+export const translationSubject = new BehaviorSubject<{
+  translationKeys: string[];
+  reversedTranslationKeys: Record<string, string>[];
+}>({
+  translationKeys: [],
+  reversedTranslationKeys: [],
+});
 
 var dartDisposableProvider: vscode.Disposable | undefined;
 var jsDisposableProvider: vscode.Disposable | undefined;
@@ -24,77 +28,36 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   const workspaceFolder = workspaceFolders[0];
+  const workspacePath = workspaceFolder.uri.fsPath;
 
+  // Register commands
   registerFlutterLocalizationCommands(context, workspaceFolder);
   registerYarnI18NCommands(context, workspaceFolder);
 
-  const config = vscode.workspace.getConfiguration('i18n-autocomplete');
-
-  const projectType = detectProjectType(workspaceFolder.uri.fsPath);
-
-  if (projectType !== ProjectType.Unknown) {
-    vscode.window.showInformationMessage(
-      `Detected project type: ${projectType}`,
-    );
-  }
-
-  let defaultLocalizationPath: string;
-  let defaultAssetPath: string;
-
-  if (projectType === ProjectType.Unknown) {
+  // Get workspace configuration
+  const config = getWorkspaceConfig(workspacePath);
+  
+  if (!config) {
     return;
   }
+  
+  const { projectType, assetPath } = config;
 
-  switch (projectType) {
-    case ProjectType.Flutter:
-      defaultLocalizationPath = 'assets/i18n';
-      defaultAssetPath = 'assets';
-      break;
-
-    case ProjectType.NodeJS:
-      defaultLocalizationPath = 'src/locales';
-      defaultAssetPath = 'src/assets';
-      break;
-  }
-
-  const i18nPathSetting = config.get<string>(
-    nameof(ExtensionConfig.prototype.jsonPath),
-    defaultLocalizationPath,
-  );
-  const i18nPath = path.join(workspaceFolder.uri.fsPath, i18nPathSetting);
-
-  if (!fs.existsSync(i18nPath)) {
-    showLog('Translation files directory not found: ' + i18nPath);
+  // Show detected project type
+  vscode.window.showInformationMessage(`Detected project type: ${projectType}`);
+  
+  // Load translation keys
+  const translationsLoaded = loadTranslationKeys(workspacePath);
+  
+  if (!translationsLoaded) {
     return;
   }
-
-  const files = fs
-    .readdirSync(i18nPath)
-    .filter((file) => file.endsWith('.json'));
-
-  if (files.length === 0) {
-    showLog('No translation files found in directory: ' + i18nPath);
-    return;
-  }
-
-  const {translationKeys, reversedTranslationKeys} = loadTranslationKeys(
-    i18nPath,
-    files,
-  );
-
-  const assetPath = config.get<string>(
-    nameof(ExtensionConfig.prototype.assetPath),
-    defaultAssetPath,
-  );
-
-  const assetFiles = loadAssetFiles(workspaceFolder.uri.fsPath, assetPath);
+  
+  // Load asset files
+  const assetFiles = loadAssetFiles(workspacePath, assetPath);
 
   // Register completion provider
-  const completionProvider = createCompletionProvider(
-    translationKeys,
-    reversedTranslationKeys,
-    assetFiles,
-  );
+  const completionProvider = createCompletionProvider(assetFiles);
 
   dartDisposableProvider = vscode.languages.registerCompletionItemProvider(
     'dart',

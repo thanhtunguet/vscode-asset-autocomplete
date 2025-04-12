@@ -1,6 +1,11 @@
 import * as fs from 'fs';
 import path from 'path';
-import {showLog} from '../helpers/log';
+import { showLog } from '../helpers/log';
+import { translationSubject } from '../extension';
+import vscode from 'vscode';
+import { detectProjectType } from '../helpers/project_type';
+import { ProjectType } from '../types/ProjectType';
+import { ExtensionConfig } from '../types/ExtensionConfig';
 
 export function extractKeys(obj: any, prefix: string, keys: string[]): void {
   for (const key in obj) {
@@ -31,28 +36,110 @@ export function extractReversedKeys(
   }
 }
 
-export function loadTranslationKeys(
-  i18nPath: string,
-  files: string[],
-): {
-  translationKeys: string[];
-  reversedTranslationKeys: Record<string, string>[];
+/**
+ * Get default paths based on project type
+ */
+export function getDefaultPaths(projectType: ProjectType): { 
+  defaultLocalizationPath: string;
+  defaultAssetPath: string;
 } {
+  switch (projectType) {
+    case ProjectType.Flutter:
+      return {
+        defaultLocalizationPath: 'assets/i18n',
+        defaultAssetPath: 'assets',
+      };
+
+    case ProjectType.NodeJS:
+      return {
+        defaultLocalizationPath: 'src/locales',
+        defaultAssetPath: 'src/assets',
+      };
+      
+    default:
+      return {
+        defaultLocalizationPath: '',
+        defaultAssetPath: '',
+      };
+  }
+}
+
+/**
+ * Load and return workspace configuration
+ */
+export function getWorkspaceConfig(workspacePath: string) {
+  const config = vscode.workspace.getConfiguration('i18n-autocomplete');
+  const projectType = detectProjectType(workspacePath);
+  
+  if (projectType === ProjectType.Unknown) {
+    return null;
+  }
+  
+  const { defaultLocalizationPath, defaultAssetPath } = getDefaultPaths(projectType);
+  
+  const i18nPathSetting = config.get<string>(
+    nameof(ExtensionConfig.prototype.jsonPath),
+    defaultLocalizationPath,
+  );
+  
+  const assetPathSetting = config.get<string>(
+    nameof(ExtensionConfig.prototype.assetPath),
+    defaultAssetPath,
+  );
+  
+  const i18nPath = path.join(workspacePath, i18nPathSetting);
+  
+  return {
+    projectType,
+    i18nPath,
+    assetPath: path.join(workspacePath, assetPathSetting),
+    i18nPathSetting,
+    assetPathSetting,
+  };
+}
+
+/**
+ * Load translation keys from files and update the translation subject
+ */
+export function loadTranslationKeys(workspacePath: string): boolean {
+  const config = getWorkspaceConfig(workspacePath);
+  
+  if (!config) {
+    return false;
+  }
+  
+  const { i18nPath, projectType } = config;
+  
+  if (!fs.existsSync(i18nPath)) {
+    // Project does not need i18n
+    return false;
+  }
+  
+  const files = fs
+    .readdirSync(i18nPath)
+    .filter((file) => file.endsWith('.json'));
+  
+  if (files.length === 0) {
+    showLog('No translation files found in directory: ' + i18nPath);
+    return false;
+  }
+  
   const translationKeys: string[] = [];
   const reversedTranslationKeys: Record<string, string>[] = [];
-
-  const file = files[0];
-
-  const filePath = path.join(i18nPath, file);
-
+  
+  // Load first file for translation keys
+  const firstFile = files[0];
+  const firstFilePath = path.join(i18nPath, firstFile);
+  
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = fs.readFileSync(firstFilePath, 'utf-8');
     const json = JSON.parse(content);
     extractKeys(json, '', translationKeys);
   } catch (error) {
-    showLog('Error parsing translation file: ' + file);
+    showLog('Error parsing translation file: ' + firstFile);
   }
-
+  
+  // Load all files for reversed translation keys
   files.forEach((file) => {
     const filePath = path.join(i18nPath, file);
     try {
@@ -63,9 +150,11 @@ export function loadTranslationKeys(
       showLog('Error parsing translation file: ' + file);
     }
   });
-
-  return {
+  
+  translationSubject.next({
     translationKeys,
     reversedTranslationKeys,
-  };
+  });
+  
+  return true;
 }

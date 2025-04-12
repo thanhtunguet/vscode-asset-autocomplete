@@ -1,5 +1,6 @@
 import {execSyncOnFolder} from '../helpers/exec';
 import * as vscode from 'vscode';
+import { loadTranslationKeys } from './translation';
 
 export function registerFlutterLocalizationCommands(
   context: vscode.ExtensionContext,
@@ -13,6 +14,8 @@ export function registerFlutterLocalizationCommands(
         'dart run supa_l10n_manager merge',
         workspaceFolder.uri.fsPath,
       );
+      // Reload translation keys after merging
+      loadTranslationKeys(workspaceFolder.uri.fsPath);
     }),
 
     vscode.commands.registerCommand(
@@ -34,6 +37,8 @@ export function registerFlutterLocalizationCommands(
           `dart run supa_l10n_manager extract -r --locale ${locale}`,
           vscode.workspace.workspaceFolders?.[0].uri.fsPath || '',
         );
+        // Reload translation keys after extracting
+        loadTranslationKeys(workspaceFolder.uri.fsPath);
         vscode.window.showInformationMessage(`${locale} keys extracted`);
       },
     ),
@@ -43,6 +48,8 @@ export function registerFlutterLocalizationCommands(
         `dart run supa_l10n_manager extract --locale vi -r`,
         workspaceFolder.uri.fsPath,
       );
+      // Reload translation keys after extracting Vietnamese
+      loadTranslationKeys(workspaceFolder.uri.fsPath);
       vscode.window.showInformationMessage('Vietnamese keys extracted');
     }),
 
@@ -51,6 +58,7 @@ export function registerFlutterLocalizationCommands(
         `dart run supa_l10n_manager extract --locale en -r`,
         workspaceFolder.uri.fsPath,
       );
+      loadTranslationKeys(workspaceFolder.uri.fsPath);
       vscode.window.showInformationMessage('English keys extracted');
     }),
 
@@ -59,7 +67,9 @@ export function registerFlutterLocalizationCommands(
         `dart run supa_l10n_manager reorder`,
         workspaceFolder.uri.fsPath,
       );
-      vscode.window.showInformationMessage('English keys extracted');
+      // Reload translation keys after reordering
+      loadTranslationKeys(workspaceFolder.uri.fsPath);
+      vscode.window.showInformationMessage('Localization keys reordered');
     }),
   );
 }

@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import {ASSET_REGEX, TRANSLATION_REGEX} from '../config/regex';
+import { translationSubject } from '../extension';
 
 export function createCompletionProvider(
-  translationKeys: string[],
-  reversedTranslationKeys: Record<string, string>[],
   assetFiles: string[],
 ): vscode.CompletionItemProvider {
   return {
@@ -11,6 +10,11 @@ export function createCompletionProvider(
       document: vscode.TextDocument,
       position: vscode.Position,
     ): vscode.CompletionItem[] | undefined {
+      const {
+        translationKeys,
+        reversedTranslationKeys,
+      } = translationSubject.value;
+      
       let suggestions: Array<vscode.CompletionItem> = [];
 
       const line = document.lineAt(position);
