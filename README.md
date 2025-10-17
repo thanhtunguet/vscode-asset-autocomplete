@@ -25,6 +25,7 @@
 - `l10n: Extract` – run `dart run supa_l10n_manager extract`
 - `l10n: Extract Vietnamese` – `--locale vi`
 - `l10n: Extract English` – `--locale en`
+- `l10n: Extract All Languages` – extracts for all configured languages
 - `l10n: Merge` – run `dart run supa_l10n_manager merge`
 
 #### React / React Native
@@ -43,6 +44,7 @@ Configure these settings in `.vscode/settings.json` or through the Settings UI:
 |--------|-------------|---------|
 | `i18n-autocomplete.jsonPath` | Path to the i18n translation folder | `assets/i18n` |
 | `i18n-autocomplete.assetPath` | Path to your asset folder | `assets` |
+| `i18n-autocomplete.languages` | List of language codes for extraction commands | `["en", "vi"]` |
 
 ---
 
@@ -62,6 +64,7 @@ Configure these settings in `.vscode/settings.json` or through the Settings UI:
 | `i18n-autocomplete.l10nExtract` | l10n: Extract |
 | `i18n-autocomplete.l10nExtractVi` | l10n: Extract Vietnamese |
 | `i18n-autocomplete.l10nExtractEn` | l10n: Extract English |
+| `i18n-autocomplete.l10nExtractAll` | l10n: Extract All Languages |
 | `i18n-autocomplete.yarnExtract` | I18n: Yarn Extract |
 | `i18n-autocomplete.yarnMerge` | I18n: Yarn Merge |
 

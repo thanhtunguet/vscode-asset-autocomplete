@@ -71,5 +71,33 @@ export function registerFlutterLocalizationCommands(
       loadTranslationKeys(workspaceFolder.uri.fsPath);
       vscode.window.showInformationMessage('Localization keys reordered');
     }),
+
+    vscode.commands.registerCommand('i18n-autocomplete.l10nExtractAll', () => {
+      const config = vscode.workspace.getConfiguration('i18n-autocomplete');
+      const languages: string[] = config.get('languages') || ['en', 'vi'];
+      
+      if (languages.length === 0) {
+        vscode.window.showWarningMessage('No languages configured for extraction');
+        return;
+      }
+
+      vscode.window.showInformationMessage(`Extracting keys for languages: ${languages.join(', ')}`);
+      
+      for (const locale of languages) {
+        try {
+          execSyncOnFolder(
+            `dart run supa_l10n_manager extract --locale ${locale} -r`,
+            workspaceFolder.uri.fsPath,
+          );
+        } catch (error) {
+          vscode.window.showErrorMessage(`Failed to extract ${locale}: ${error}`);
+          return;
+        }
+      }
+      
+      // Reload translation keys after extracting all languages
+      loadTranslationKeys(workspaceFolder.uri.fsPath);
+      vscode.window.showInformationMessage(`All languages extracted successfully: ${languages.join(', ')}`);
+    }),
   );
 }
