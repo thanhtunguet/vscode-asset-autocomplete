@@ -5,6 +5,7 @@ import {createCompletionProvider} from './registers/completion_provider';
 import {registerFlutterLocalizationCommands} from './registers/flutter_l10n_commands';
 import {loadTranslationKeys, getWorkspaceConfig} from './registers/translation';
 import {registerYarnI18NCommands} from './registers/yarn_i18n_commands';
+import {registerNativeExtractionCommands} from './registers/native_extraction_commands';
 import {BehaviorSubject} from 'rxjs';
 
 export const translationSubject = new BehaviorSubject<{
@@ -33,6 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // Register commands
   registerFlutterLocalizationCommands(context, workspaceFolder);
   registerYarnI18NCommands(context, workspaceFolder);
+  registerNativeExtractionCommands(context, workspaceFolder);
 
   // Get workspace configuration
   const config = getWorkspaceConfig(workspacePath);

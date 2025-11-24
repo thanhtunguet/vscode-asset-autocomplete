@@ -19,16 +19,31 @@
   - `assets/` for Flutter
   - `src/assets/` for React/React Native
 
-### ⚙️ Quick Commands for i18n Management
+### ⚙️ Translation Extraction Commands
 
-#### Flutter
+#### 🚀 Native Extraction (New!)
+- `I18n: Native Extract All` – Extract translations for all configured languages
+- `I18n: Native Extract` – Extract for a specific language (with picker)
+- `I18n: Analyze Translations` – Analyze translations without generating files
+- `I18n: Configure Language` – Add new language to configuration
+
+**Smart Extraction Features:**
+- ✅ **Preserves existing translations** - keeps your translated text
+- ✅ **Adds new keys only** - found in source code
+- ✅ **Removes orphan keys** - no longer used in code
+- ✅ **Flat key structure** - simple `"key.name": "value"` format
+- ✅ **Works with nested files** - converts to flat automatically
+
+#### 🔧 Legacy External Tool Commands
+
+##### Flutter
 - `l10n: Extract` – run `dart run supa_l10n_manager extract`
 - `l10n: Extract Vietnamese` – `--locale vi`
 - `l10n: Extract English` – `--locale en`
 - `l10n: Extract All Languages` – extracts for all configured languages
 - `l10n: Merge` – run `dart run supa_l10n_manager merge`
 
-#### React / React Native
+##### React / React Native
 - `I18n: Yarn Extract` – runs `yarn extract`  
   _(Defined as: `react3l translate extract -i src/ -o src/locales/ -p src/locales/`)_
 - `I18n: Yarn Merge` – runs `yarn merge`  
@@ -38,13 +53,62 @@
 
 ## ⚙️ Configuration
 
-Configure these settings in `.vscode/settings.json` or through the Settings UI:
+### Quick Setup
+
+Add this configuration to your `.vscode/settings.json` file:
+
+#### For Dart/Flutter Projects:
+```json
+{
+  "i18n-autocomplete.languages": ["en", "vi"],
+  "i18n-autocomplete.projectLanguage": "dart",
+  "i18n-autocomplete.jsonPath": "assets/i18n",
+  "i18n-autocomplete.sourceDirs": ["lib/", "src/"],
+  "i18n-autocomplete.excludePatterns": [
+    "**/*.test.dart",
+    "**/*.g.dart",
+    "**/build/**",
+    "**/.dart_tool/**"
+  ]
+}
+```
+
+#### For TypeScript/JavaScript Projects:
+```json
+{
+  "i18n-autocomplete.languages": ["en", "vi"],
+  "i18n-autocomplete.projectLanguage": "typescript",
+  "i18n-autocomplete.jsonPath": "src/locales",
+  "i18n-autocomplete.sourceDirs": ["src/", "components/", "pages/"],
+  "i18n-autocomplete.excludePatterns": [
+    "**/*.test.ts",
+    "**/*.test.js",
+    "**/*.spec.ts",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**"
+  ]
+}
+```
+
+#### Minimal Configuration (uses defaults):
+```json
+{
+  "i18n-autocomplete.languages": ["en", "vi"],
+  "i18n-autocomplete.projectLanguage": "typescript"
+}
+```
+
+### Configuration Settings
 
 | Setting | Description | Default |
 |--------|-------------|---------|
-| `i18n-autocomplete.jsonPath` | Path to the i18n translation folder | `assets/i18n` |
-| `i18n-autocomplete.assetPath` | Path to your asset folder | `assets` |
-| `i18n-autocomplete.languages` | List of language codes for extraction commands | `["en", "vi"]` |
+| `i18n-autocomplete.languages` | List of language codes for extraction | `["en", "vi"]` |
+| `i18n-autocomplete.projectLanguage` | Project type: "dart" or "typescript" | `"typescript"` |
+| `i18n-autocomplete.jsonPath` | Path to the i18n translation folder | `"assets/i18n"` |
+| `i18n-autocomplete.sourceDirs` | Source directories to scan for translations | `["src/"]` |
+| `i18n-autocomplete.excludePatterns` | Files/folders to exclude from scanning | `["**/*.test.ts", "**/node_modules/**"]` |
+| `i18n-autocomplete.assetPath` | Path to your asset folder | `"assets"` |
 
 ---
 
@@ -58,6 +122,15 @@ Configure these settings in `.vscode/settings.json` or through the Settings UI:
 
 ## 💻 Commands
 
+### Native Extraction Commands
+| Command ID | Title |
+|------------|-------|
+| `i18n-autocomplete.nativeExtractAll` | I18n: Native Extract All |
+| `i18n-autocomplete.nativeExtract` | I18n: Native Extract |
+| `i18n-autocomplete.nativeAnalyze` | I18n: Analyze Translations |
+| `i18n-autocomplete.configureLanguage` | I18n: Configure Language |
+
+### Legacy External Tool Commands
 | Command ID | Title |
 |------------|-------|
 | `i18n-autocomplete.l10nMerge` | l10n: Merge |

@@ -67,6 +67,22 @@
       {
         "command": "i18n-autocomplete.yarnMerge",
         "title": "I18n: Yarn Merge"
+      },
+      {
+        "command": "i18n-autocomplete.nativeExtractAll",
+        "title": "I18n: Native Extract All"
+      },
+      {
+        "command": "i18n-autocomplete.nativeExtract",
+        "title": "I18n: Native Extract"
+      },
+      {
+        "command": "i18n-autocomplete.nativeAnalyze",
+        "title": "I18n: Analyze Translations"
+      },
+      {
+        "command": "i18n-autocomplete.configureLanguage",
+        "title": "I18n: Configure Language"
       }
     ],
     "languages": [
@@ -115,6 +131,29 @@
             "vi"
           ],
           "description": "List of language codes for extraction commands"
+        },
+        "i18n-autocomplete.projectLanguage": {
+          "type": "string",
+          "enum": ["dart", "typescript"],
+          "default": "typescript",
+          "description": "Project language type: 'dart' for Flutter/Dart projects, 'typescript' for TypeScript/JavaScript projects"
+        },
+        "i18n-autocomplete.sourceDirs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["src/"],
+          "description": "Source directories to scan for translation keys"
+        },
+
+        "i18n-autocomplete.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["**/*.test.ts", "**/*.test.js", "**/*.test.dart", "**/node_modules/**", "**/dist/**", "**/build/**"],
+          "description": "Glob patterns for files and directories to exclude from scanning"
         }
       }
     }
