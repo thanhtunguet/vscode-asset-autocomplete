@@ -1,53 +1,41 @@
 # VSCode Asset Autocomplete
 
-**VSCode Asset Autocomplete** is a powerful extension that provides translation key suggestions and asset path completions for Flutter, React, and React Native projects. It also includes convenient commands to extract and merge localization files using your preferred tooling.
+**VSCode Asset Autocomplete** is a powerful VSCode extension that provides intelligent translation key autocomplete and asset path completions for Flutter, React, and React Native projects. **Version 1.0.0** introduces native translation management directly within VSCode - no external CLI tools required!
 
 ---
 
 ## ✨ Features
 
-### 🔤 Translation Key Suggestions
-- Autocomplete translation keys from your JSON i18n files.
-- Reverse-lookup suggestions from translation text.
-- Supports multi-level nested keys.
+### 🔤 Smart Translation Management
+- **Intelligent autocomplete** for translation keys from your JSON i18n files
+- **Reverse-lookup suggestions** from translation text
+- **Multi-level nested key support** with dot notation
+- **Native extraction and merging** - no CLI dependencies needed
 - Language support:
   - Dart (Flutter)
   - JavaScript / TypeScript (React, React Native)
 
 ### 🖼️ Asset Path Autocompletion
 - Provides completions for files in your asset folder:
-  - `assets/` for Flutter
-  - `src/assets/` for React/React Native
+  - `assets/` for Flutter projects
+  - `src/assets/` for React/React Native projects
 
-### ⚙️ Translation Extraction Commands
+### 🚀 Built-in Translation Commands
 
-#### 🚀 Native Extraction (New!)
-- `I18n: Native Extract All` – Extract translations for all configured languages
-- `I18n: Native Extract` – Extract for a specific language (with picker)
-- `I18n: Analyze Translations` – Analyze translations without generating files
-- `I18n: Configure Language` – Add new language to configuration
+#### ⭐ Native Translation Management (No CLI Required!)
+- **`I18n: Native Extract All`** – Extract translations for all configured languages
+- **`I18n: Native Extract`** – Extract for a specific language (with picker)
+- **`I18n: Merge`** – Merge translation files
+- **`I18n: Analyze Translations`** – Analyze translations without generating files
+- **`I18n: Configure Language`** – Add new language to configuration
 
 **Smart Extraction Features:**
-- ✅ **Preserves existing translations** - keeps your translated text
+- ✅ **Preserves existing translations** - keeps your translated text intact
 - ✅ **Adds new keys only** - found in source code
 - ✅ **Removes orphan keys** - no longer used in code
 - ✅ **Flat key structure** - simple `"key.name": "value"` format
 - ✅ **Works with nested files** - converts to flat automatically
-
-#### 🔧 Legacy External Tool Commands
-
-##### Flutter
-- `l10n: Extract` – run `dart run supa_l10n_manager extract`
-- `l10n: Extract Vietnamese` – `--locale vi`
-- `l10n: Extract English` – `--locale en`
-- `l10n: Extract All Languages` – extracts for all configured languages
-- `l10n: Merge` – run `dart run supa_l10n_manager merge`
-
-##### React / React Native
-- `I18n: Yarn Extract` – runs `yarn extract`  
-  _(Defined as: `react3l translate extract -i src/ -o src/locales/ -p src/locales/`)_
-- `I18n: Yarn Merge` – runs `yarn merge`  
-  _(Defined as: `react3l translate merge -i src/ -o src/locales/ -p src/locales/`)_
+- ✅ **Zero external dependencies** - everything runs within VSCode
 
 ---
 
@@ -122,46 +110,43 @@ Add this configuration to your `.vscode/settings.json` file:
 
 ## 💻 Commands
 
-### Native Extraction Commands
-| Command ID | Title |
-|------------|-------|
-| `i18n-autocomplete.nativeExtractAll` | I18n: Native Extract All |
-| `i18n-autocomplete.nativeExtract` | I18n: Native Extract |
-| `i18n-autocomplete.nativeAnalyze` | I18n: Analyze Translations |
-| `i18n-autocomplete.configureLanguage` | I18n: Configure Language |
+All commands are available through the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 
-### Legacy External Tool Commands
-| Command ID | Title |
-|------------|-------|
-| `i18n-autocomplete.l10nMerge` | l10n: Merge |
-| `i18n-autocomplete.l10nExtract` | l10n: Extract |
-| `i18n-autocomplete.l10nExtractVi` | l10n: Extract Vietnamese |
-| `i18n-autocomplete.l10nExtractEn` | l10n: Extract English |
-| `i18n-autocomplete.l10nExtractAll` | l10n: Extract All Languages |
-| `i18n-autocomplete.yarnExtract` | I18n: Yarn Extract |
-| `i18n-autocomplete.yarnMerge` | I18n: Yarn Merge |
-
-Use these commands via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+| Command | Description |
+|---------|-------------|
+| **I18n: Native Extract All** | Extract translations for all configured languages |
+| **I18n: Native Extract** | Extract for a specific language (with picker) |
+| **I18n: Merge** | Merge translation files |
+| **I18n: Analyze Translations** | Analyze translations without generating files |
+| **I18n: Configure Language** | Add new language to configuration |
+| **l10n: Extract** | Extract for specific locale (with prompt) |
+| **l10n: Extract All Languages** | Extract for all configured languages |
 
 ---
 
 ## 🛠 Requirements
 
-- For Flutter projects: `supa_l10n_manager` must be available via Dart.
-- For React/React Native: The following scripts must be defined in `package.json`:
+**Version 1.0.0 and above:** No external dependencies required! The extension now handles translation management natively within VSCode.
 
-```json
-"scripts": {
-  "extract": "react3l translate extract -i src/ -o src/locales/ -p src/locales/",
-  "merge": "react3l translate merge -i src/ -o src/locales/ -p src/locales/"
-}
-```
+**For legacy features only:**
+- Flutter projects: `supa_l10n_manager` (if using legacy l10n commands)
+- React/React Native: `yarn extract`/`yarn merge` scripts (if using legacy yarn commands)
 
 ---
 
 ## 📦 Installation
 
-Search for **"vscode-i18n-autocomplete"** in the Extensions Marketplace or install manually from VSIX.
+Search for **"vscode-asset-autocomplete"** in the VSCode Extensions Marketplace or install manually from VSIX.
+
+## 🚀 Quick Start
+
+1. **Install the extension** from the marketplace
+2. **Configure your project** by adding settings to `.vscode/settings.json`
+3. **Start using commands** via Command Palette (`Ctrl+Shift+P`)
+   - Try **"I18n: Native Extract All"** to extract all translation keys
+   - Use **"I18n: Configure Language"** to add new languages
+
+No additional setup or CLI tools required!
 
 ---
 

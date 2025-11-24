@@ -43,26 +43,7 @@ export function registerFlutterLocalizationCommands(
       },
     ),
 
-    vscode.commands.registerCommand('i18n-autocomplete.l10nExtractVi', () => {
-      execSyncOnFolder(
-        `dart run supa_l10n_manager extract --locale vi -r`,
-        workspaceFolder.uri.fsPath,
-      );
-      // Reload translation keys after extracting Vietnamese
-      loadTranslationKeys(workspaceFolder.uri.fsPath);
-      vscode.window.showInformationMessage('Vietnamese keys extracted');
-    }),
-
-    vscode.commands.registerCommand('i18n-autocomplete.l10nExtractEn', () => {
-      execSyncOnFolder(
-        `dart run supa_l10n_manager extract --locale en -r`,
-        workspaceFolder.uri.fsPath,
-      );
-      loadTranslationKeys(workspaceFolder.uri.fsPath);
-      vscode.window.showInformationMessage('English keys extracted');
-    }),
-
-    vscode.commands.registerCommand('i18n-autocomplete.l10nReorder', () => {
+vscode.commands.registerCommand('i18n-autocomplete.l10nReorder', () => {
       execSyncOnFolder(
         `dart run supa_l10n_manager reorder`,
         workspaceFolder.uri.fsPath,
