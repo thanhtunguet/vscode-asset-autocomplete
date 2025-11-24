@@ -33,25 +33,30 @@ export abstract class BaseTranslationExtractor {
   protected extractFromContent(content: string, filePath: string): ExtractedTranslation[] {
     const regex = this.getRegexPattern();
     const translations: ExtractedTranslation[] = [];
-    const lines = content.split('\n');
+    let match;
 
-    lines.forEach((line, lineIndex) => {
-      let match;
-      regex.lastIndex = 0; // Reset regex state
+    // Reset regex state before starting
+    regex.lastIndex = 0;
 
-      while ((match = regex.exec(line)) !== null) {
-        const key = this.extractKey(match);
-        if (key) {
-          translations.push({
-            key,
-            filePath,
-            line: lineIndex + 1,
-            column: match.index + 1,
-            fullMatch: match[0],
-          });
-        }
+    // Run regex on entire content to handle multi-line matches
+    while ((match = regex.exec(content)) !== null) {
+      const key = this.extractKey(match);
+      if (key) {
+        // Calculate line and column from match position
+        const beforeMatch = content.substring(0, match.index);
+        const line = (beforeMatch.match(/\n/g) || []).length + 1;
+        const lastNewlineIndex = beforeMatch.lastIndexOf('\n');
+        const column = match.index - lastNewlineIndex;
+
+        translations.push({
+          key,
+          filePath,
+          line,
+          column,
+          fullMatch: match[0],
+        });
       }
-    });
+    }
 
     return translations;
   }
@@ -73,9 +78,13 @@ export class DartTranslationExtractor extends BaseTranslationExtractor {
       return new RegExp(this.languageConfig.regex, 'g');
     }
 
-    // Default Dart pattern based on your reference:
-    // translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^}]*\})?\s*\)
-    return /translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^}]*\})?\s*\)/g;
+    // Enhanced Dart pattern to handle optional second argument (map):
+    // Examples:
+    // translate('key') 
+    // translate('key', {})
+    // translate('key', {'param': value})
+    // translate('key', {'param': value, 'other': otherValue})
+    return /translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/g;
   }
 
   protected extractKey(match: RegExpExecArray): string | null {
@@ -116,9 +125,14 @@ export class TypeScriptTranslationExtractor extends BaseTranslationExtractor {
       return new RegExp(this.languageConfig.regex, 'g');
     }
 
-    // Default TypeScript/JavaScript pattern - more flexible quote handling
-    // Matches: t('key'), translate('key'), t("key"), translate("key")
-    return /\bt(?:ranslate)?\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*\{[^}]*\})?\s*\)/g;
+    // Enhanced TypeScript/JavaScript pattern to handle optional second argument (object):
+    // Examples:
+    // t('key'), translate('key')
+    // t("key"), translate("key") 
+    // t(`key`), translate(`key`)
+    // t('key', {}), translate('key', {})
+    // t('key', {param: value}), translate('key', {param: value, other: 'test'})
+    return /\bt(?:ranslate)?\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/g;
   }
 
   protected extractKey(match: RegExpExecArray): string | null {

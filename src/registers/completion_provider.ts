@@ -1,6 +1,53 @@
 import * as vscode from 'vscode';
-import {ASSET_REGEX, TRANSLATION_REGEX} from '../config/regex';
 import { translationSubject } from '../extension';
+
+// Asset regex (moved from config/regex.ts)
+const ASSET_REGEX = /['"](assets\/[^'"]*)['"]/;
+
+/**
+ * Get translation regex based on file language
+ */
+function getTranslationRegex(languageId: string): RegExp {
+  switch (languageId) {
+    case 'dart':
+      // Enhanced Dart pattern with optional second argument (map)
+      return /translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/;
+    case 'typescript':
+    case 'javascript':
+      // Enhanced TypeScript/JavaScript pattern with optional second argument (object)
+      return /\bt(?:ranslate)?\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/;
+    default:
+      // Fallback pattern for unknown languages
+      return /\bt(?:ranslate)?\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/;
+  }
+}
+
+/**
+ * Extract translation key from regex match based on language
+ */
+function extractTranslationKey(match: RegExpMatchArray, languageId: string): { openingQuote: string; translationKey: string; closeQuote: string } {
+  switch (languageId) {
+    case 'dart':
+      return {
+        openingQuote: "'",
+        translationKey: match[1] || '',
+        closeQuote: "'",
+      };
+    case 'typescript':
+    case 'javascript':
+      return {
+        openingQuote: match[1] || "'",
+        translationKey: match[2] || '',
+        closeQuote: match[1] || "'",
+      };
+    default:
+      return {
+        openingQuote: match[1] || "'",
+        translationKey: match[2] || '',
+        closeQuote: match[1] || "'",
+      };
+  }
+}
 
 export function createCompletionProvider(
   assetFiles: string[],
@@ -47,17 +94,11 @@ export function createCompletionProvider(
       const previousLineText = document.lineAt(previousLine).text;
       lineText = `${previousLineText} ${lineText}`;
 
-      const translationMatches = lineText.match(TRANSLATION_REGEX);
+      const translationRegex = getTranslationRegex(document.languageId);
+      const translationMatches = lineText.match(translationRegex);
 
       if (translationMatches) {
-        const openingQuote = translationMatches[2];
-        const translationKey = translationMatches[3];
-        let closeQuote = translationMatches[4];
-        if (closeQuote === '') {
-          closeQuote = openingQuote;
-        } else {
-          closeQuote = '';
-        }
+        const { openingQuote, translationKey, closeQuote } = extractTranslationKey(translationMatches, document.languageId);
 
         suggestions = [
           ...suggestions,
@@ -71,7 +112,7 @@ export function createCompletionProvider(
               item.insertText = `${key.replace(
                 translationKey,
                 '',
-              )}${closeQuote}`;
+              )}`;
               return item;
             }),
         ];
@@ -92,7 +133,7 @@ export function createCompletionProvider(
               item.insertText = `${value.replace(
                 translationKey,
                 '',
-              )}${closeQuote}`;
+              )}`;
               item.label = `${key} (${value})`;
               return item;
             }),

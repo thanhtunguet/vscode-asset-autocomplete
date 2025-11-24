@@ -2,7 +2,7 @@
   "name": "vscode-asset-autocomplete",
   "displayName": "vscode-asset-autocomplete",
   "description": "VSCode extension for auto-completing translation keys from JSON",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "icon": "extension/assets/vscode-asset-autocomplete.png",
   "engines": {
     "vscode": "^1.90.0"
@@ -134,7 +134,10 @@
         },
         "i18n-autocomplete.projectLanguage": {
           "type": "string",
-          "enum": ["dart", "typescript"],
+          "enum": [
+            "dart",
+            "typescript"
+          ],
           "default": "typescript",
           "description": "Project language type: 'dart' for Flutter/Dart projects, 'typescript' for TypeScript/JavaScript projects"
         },
@@ -143,16 +146,24 @@
           "items": {
             "type": "string"
           },
-          "default": ["src/"],
+          "default": [
+            "src/"
+          ],
           "description": "Source directories to scan for translation keys"
         },
-
         "i18n-autocomplete.excludePatterns": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "default": ["**/*.test.ts", "**/*.test.js", "**/*.test.dart", "**/node_modules/**", "**/dist/**", "**/build/**"],
+          "default": [
+            "**/*.test.ts",
+            "**/*.test.js",
+            "**/*.test.dart",
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**"
+          ],
           "description": "Glob patterns for files and directories to exclude from scanning"
         }
       }
@@ -170,7 +181,7 @@
     "@typescript-nameof/types": "^0.0.11",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.3.1",
+    "@vscode/vsce": "^3.7.1",
     "awesome-typescript-loader": "^5.2.1",
     "eslint": "^9.21.0",
     "ts-loader": "^9.5.2",
