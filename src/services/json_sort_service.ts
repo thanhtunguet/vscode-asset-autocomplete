@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 export class JsonSortService {
   constructor(private workspacePath: string) {}
 
-  async sortAllJsonTranslationFiles(): Promise<void> {
+  async sortAllJsonTranslationFiles(): Promise<{totalFiles: number; sortedFiles: number}> {
     const translationDirs = this.getTranslationDirectories();
     let totalFiles = 0;
     let sortedFiles = 0;
@@ -24,7 +24,7 @@ export class JsonSortService {
               sortedFiles++;
             }
           } catch (error) {
-            vscode.window.showWarningMessage(`Failed to sort ${file}: ${error}`);
+            vscode.window.showWarningMessage(`Failed to sort ${file}: ${error instanceof Error ? error.message : String(error)}`);
           }
         }
       }
@@ -55,7 +55,7 @@ export class JsonSortService {
       
       return false;
     } catch (error) {
-      throw new Error(`Error sorting ${filePath}: ${error.message}`);
+      throw new Error(`Error sorting ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
