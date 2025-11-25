@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import {showLog} from './helpers/log';
 import {loadAssetFiles} from './registers/asset';
 import {createCompletionProvider} from './registers/completion_provider';
-import {registerFlutterLocalizationCommands} from './registers/flutter_l10n_commands';
+
 import {loadTranslationKeys, getWorkspaceConfig} from './registers/translation';
-import {registerYarnI18NCommands} from './registers/yarn_i18n_commands';
+
 import {registerNativeExtractionCommands} from './registers/native_extraction_commands';
 import {registerJsonSortCommands} from './registers/json_sort_commands';
 import {BehaviorSubject} from 'rxjs';
@@ -33,8 +33,8 @@ export async function activate(context: vscode.ExtensionContext) {
   const workspacePath = workspaceFolder.uri.fsPath;
 
   // Register commands
-  registerFlutterLocalizationCommands(context, workspaceFolder);
-  registerYarnI18NCommands(context, workspaceFolder);
+
+
   registerNativeExtractionCommands(context, workspaceFolder);
   registerJsonSortCommands(context, workspaceFolder);
 

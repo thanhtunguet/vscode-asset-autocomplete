@@ -128,10 +128,6 @@ All commands are available through the Command Palette (`Ctrl+Shift+P` / `Cmd+Sh
 
 **Version 1.0.0 and above:** No external dependencies required! The extension now handles translation management natively within VSCode.
 
-**For legacy features only:**
-- Flutter projects: `supa_l10n_manager` (if using legacy l10n commands)
-- React/React Native: `yarn extract`/`yarn merge` scripts (if using legacy yarn commands)
-
 ---
 
 ## 📦 Installation
