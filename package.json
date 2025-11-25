@@ -8,7 +8,9 @@
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Flutter",
+    "TypeScript"
   ],
   "repository": {
     "url": "https://github.com/thanhtunguet/vscode-asset-autocomplete",
@@ -75,6 +77,10 @@
       {
         "command": "i18n-autocomplete.configureLanguage",
         "title": "I18n: Configure Language"
+      },
+      {
+        "command": "i18n-autocomplete.sortJsonTranslations",
+        "title": "I18n: Sort JSON Translation Files"
       }
     ],
     "languages": [

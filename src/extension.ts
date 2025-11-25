@@ -6,6 +6,7 @@ import {registerFlutterLocalizationCommands} from './registers/flutter_l10n_comm
 import {loadTranslationKeys, getWorkspaceConfig} from './registers/translation';
 import {registerYarnI18NCommands} from './registers/yarn_i18n_commands';
 import {registerNativeExtractionCommands} from './registers/native_extraction_commands';
+import {registerJsonSortCommands} from './registers/json_sort_commands';
 import {BehaviorSubject} from 'rxjs';
 
 export const translationSubject = new BehaviorSubject<{
@@ -35,6 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
   registerFlutterLocalizationCommands(context, workspaceFolder);
   registerYarnI18NCommands(context, workspaceFolder);
   registerNativeExtractionCommands(context, workspaceFolder);
+  registerJsonSortCommands(context, workspaceFolder);
 
   // Get workspace configuration
   const config = getWorkspaceConfig(workspacePath);
