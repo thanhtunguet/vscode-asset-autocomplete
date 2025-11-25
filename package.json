@@ -8,9 +8,7 @@
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Programming Languages",
-    "Flutter",
-    "TypeScript"
+    "Programming Languages"
   ],
   "repository": {
     "url": "https://github.com/thanhtunguet/vscode-asset-autocomplete",
