@@ -141,6 +141,58 @@ export function registerNativeExtractionCommands(
         vscode.window.showErrorMessage(`Failed to configure language: ${error}`);
       }
     }),
+
+    // Merge all configured languages
+    vscode.commands.registerCommand('i18n-autocomplete.nativeMergeAll', async () => {
+      try {
+        vscode.window.showInformationMessage('Starting translation file merge for all languages...');
+        await extractionService.mergeTranslationFiles();
+        
+        // Reload translation keys after merge
+        loadTranslationKeys(workspaceFolder.uri.fsPath);
+        vscode.window.showInformationMessage('Translation file merge completed for all languages');
+      } catch (error) {
+        vscode.window.showErrorMessage(`Translation merge failed: ${error}`);
+        showLog(`Translation merge error: ${error}`);
+      }
+    }),
+
+    // Merge for specific language
+    vscode.commands.registerCommand('i18n-autocomplete.nativeMerge', async () => {
+      try {
+        const languageConfigs = getLanguageConfigs();
+        
+        if (languageConfigs.length === 0) {
+          vscode.window.showWarningMessage('No language configurations found. Please configure projectLanguages in settings.');
+          return;
+        }
+
+        // Show language picker
+        const languageOptions = languageConfigs.map(config => ({
+          label: config.code,
+          description: `Source: ${config.sourceDirs.join(', ')} → Target: ${config.targetPath}`,
+          config,
+        }));
+
+        const selected = await vscode.window.showQuickPick(languageOptions, {
+          placeHolder: 'Select language to merge',
+        });
+
+        if (!selected) {
+          return;
+        }
+
+        vscode.window.showInformationMessage(`Starting translation file merge for ${selected.config.code}...`);
+        await extractionService.mergeTranslationFile(selected.config);
+        
+        // Reload translation keys after merge
+        loadTranslationKeys(workspaceFolder.uri.fsPath);
+        vscode.window.showInformationMessage(`Translation file merge completed for ${selected.config.code}`);
+      } catch (error) {
+        vscode.window.showErrorMessage(`Translation merge failed: ${error}`);
+        showLog(`Translation merge error: ${error}`);
+      }
+    }),
   );
 }
 

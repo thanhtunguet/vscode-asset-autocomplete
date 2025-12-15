@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { LanguageConfig } from '../types/ExtensionConfig';
 import { FileScanner } from './file_scanner';
-import { TranslationExtractorFactory, type ExtractionResult, BaseTranslationExtractor } from './translation_extractor';
+import { TranslationExtractorFactory, type ExtractionResult, type ExtractedTranslation, BaseTranslationExtractor } from './translation_extractor';
 import { detectProjectType } from '../helpers/project_type';
 import { ProjectType } from '../types/ProjectType';
 import { showLog } from '../helpers/log';
@@ -103,6 +103,34 @@ export class ExtractionService {
   }
 
   /**
+   * Merge translation files for all configured languages without resetting existing values
+   */
+  /**
+   * Merge translation files for all configured languages without resetting existing values
+   */
+  public async mergeTranslationFiles(): Promise<void> {
+    const languageConfigs = this.getLanguageConfigs();
+    
+    for (const languageConfig of languageConfigs) {
+      await this.mergeTranslationFile(languageConfig);
+    }
+    
+    showLog(`Merged translation files for ${languageConfigs.length} languages`);
+  }
+
+  /**
+   * Merge translation file for a specific language without resetting existing values
+   */
+  /**
+   * Merge translation file for a specific language without resetting existing values
+   */
+  public async mergeTranslationFile(languageConfig: LanguageConfig): Promise<void> {
+    await this.mergePartialFilesToSingleFile(languageConfig);
+    
+    showLog(`Merged translation files for ${languageConfig.code}`);
+  }
+
+  /**
    * Generate partial translation files organized by namespace
    */
   private async generatePartialFiles(result: ExtractionResult, languageConfig: LanguageConfig): Promise<void> {
@@ -185,6 +213,117 @@ export class ExtractionService {
     
     fs.writeFileSync(mainFilePath, JSON.stringify(sortedTranslations, null, 2), 'utf-8');
     showLog(`Updated main file: ${mainFilePath} (${Object.keys(updatedTranslations).length} keys)`);
+  }
+
+  /**
+   * Merge partial files with existing translations preserved
+   */
+  /**
+   * Merge all partial files from a language folder into a single language file
+   * Only includes namespaced keys (with filename prefix)
+   */
+  private async mergePartialFilesToSingleFile(languageConfig: LanguageConfig): Promise<void> {
+    const partialDir = path.join(this.workspacePath, languageConfig.targetPath);
+    const mainFilePath = path.join(this.workspacePath, languageConfig.mainFilePath);
+    const mainFileDir = path.dirname(mainFilePath);
+    
+    // Ensure main file directory exists
+    if (!fs.existsSync(mainFileDir)) {
+      fs.mkdirSync(mainFileDir, { recursive: true });
+    }
+
+    // Check if partial directory exists
+    if (!fs.existsSync(partialDir)) {
+      showLog(`Partial directory does not exist: ${partialDir}`);
+      return;
+    }
+
+    // Read all JSON files from the partial directory
+    const partialFiles = fs.readdirSync(partialDir)
+      .filter(file => file.endsWith('.json'))
+      .map(file => path.join(partialDir, file));
+
+    if (partialFiles.length === 0) {
+      showLog(`No partial JSON files found in: ${partialDir}`);
+      return;
+    }
+
+    // Load existing main file to preserve existing translations
+    const existingTranslations = this.loadExistingTranslations(mainFilePath);
+    const mergedTranslations: TranslationFile = { ...existingTranslations };
+
+    // Read and merge all partial files
+    for (const partialFilePath of partialFiles) {
+      try {
+        const partialContent = fs.readFileSync(partialFilePath, 'utf-8');
+        const partialTranslations = JSON.parse(partialContent);
+        
+        // Get the namespace from the filename (without extension)
+        const namespace = path.basename(partialFilePath, '.json');
+        
+        // Add each translation with namespace prefix only
+        Object.entries(partialTranslations).forEach(([key, value]) => {
+          const stringValue = String(value);
+          
+          // Add only the namespaced key (with filename as namespace prefix)
+          const namespacedKey = `${namespace}.${key}`;
+          
+          // Preserve existing values or use new ones for namespaced key
+          if (mergedTranslations[namespacedKey] === undefined || mergedTranslations[namespacedKey] === '') {
+            mergedTranslations[namespacedKey] = stringValue;
+          }
+        });
+        
+        showLog(`Merged partial file: ${partialFilePath} (added namespaced keys with prefix: ${namespace})`);
+      } catch (error) {
+        showLog(`Error reading partial file ${partialFilePath}: ${error}`);
+      }
+    }
+
+    // Sort keys alphabetically for better organization
+    const sortedTranslations = this.sortTranslationKeys(mergedTranslations);
+    
+    // Write the merged translations to the main file
+    fs.writeFileSync(mainFilePath, JSON.stringify(sortedTranslations, null, 2), 'utf-8');
+    showLog(`Merged ${partialFiles.length} partial files into: ${mainFilePath} (${Object.keys(sortedTranslations).length} namespaced keys total)`);
+  }
+
+  /**
+   * Merge main file with existing translations preserved
+   */
+  /**
+   * Legacy method - no longer used in merge functionality
+   * Merge main file with existing translations preserved
+   */
+  private async mergeMainFile(result: ExtractionResult, languageConfig: LanguageConfig): Promise<void> {
+    // This method is deprecated in favor of mergePartialFilesToSingleFile
+    // Keeping for backward compatibility but no longer used in merge operations
+    const mainFilePath = path.join(this.workspacePath, languageConfig.mainFilePath);
+    const mainFileDir = path.dirname(mainFilePath);
+    
+    // Ensure directory exists
+    if (!fs.existsSync(mainFileDir)) {
+      fs.mkdirSync(mainFileDir, { recursive: true });
+    }
+
+    // Load existing translations to preserve them
+    const existingTranslations = this.loadExistingTranslations(mainFilePath);
+    const updatedTranslations: TranslationFile = { ...existingTranslations };
+    
+    // Add new keys found in code while preserving existing values
+    result.translations.forEach(translation => {
+      if (!updatedTranslations.hasOwnProperty(translation.key)) {
+        // Only add new keys, don't overwrite existing ones with empty values
+        updatedTranslations[translation.key] = '';
+      }
+      // Existing keys keep their current values
+    });
+    
+    // Sort keys alphabetically for better organization
+    const sortedTranslations = this.sortTranslationKeys(updatedTranslations);
+    
+    fs.writeFileSync(mainFilePath, JSON.stringify(sortedTranslations, null, 2), 'utf-8');
+    showLog(`Merged main file: ${mainFilePath} (${Object.keys(updatedTranslations).length} keys)`);
   }
 
   /**

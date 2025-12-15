@@ -2,7 +2,7 @@
   "name": "vscode-asset-autocomplete",
   "displayName": "vscode-asset-autocomplete",
   "description": "VSCode extension for auto-completing translation keys from JSON",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "icon": "extension/assets/vscode-asset-autocomplete.png",
   "engines": {
     "vscode": "^1.90.0"
@@ -55,6 +55,14 @@
       {
         "command": "i18n-autocomplete.sortJsonTranslations",
         "title": "I18n: Sort JSON Translation Files"
+      },
+      {
+        "command": "i18n-autocomplete.nativeMergeAll",
+        "title": "I18n: Merge Translation Files All"
+      },
+      {
+        "command": "i18n-autocomplete.nativeMerge",
+        "title": "I18n: Merge Translation Files"
       }
     ],
     "languages": [
