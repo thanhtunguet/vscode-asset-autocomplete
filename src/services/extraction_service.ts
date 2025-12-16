@@ -248,9 +248,11 @@ export class ExtractionService {
       return;
     }
 
-    // Load existing main file to preserve existing translations
+    // Load existing main file to preserve translation values (but start fresh to avoid prefix duplication)
     const existingTranslations = this.loadExistingTranslations(mainFilePath);
-    const mergedTranslations: TranslationFile = { ...existingTranslations };
+    
+    // Start with empty translations to avoid duplication from previous merges
+    const mergedTranslations: TranslationFile = {};
 
     // Read and merge all partial files
     for (const partialFilePath of partialFiles) {
@@ -268,9 +270,16 @@ export class ExtractionService {
           // Add only the namespaced key (with filename as namespace prefix)
           const namespacedKey = `${namespace}.${key}`;
           
-          // Preserve existing values or use new ones for namespaced key
-          if (mergedTranslations[namespacedKey] === undefined || mergedTranslations[namespacedKey] === '') {
+          // Preserve existing translation values over partial file values
+          if (existingTranslations[namespacedKey] && existingTranslations[namespacedKey].trim() !== '') {
+            // Preserve existing non-empty translation values
+            mergedTranslations[namespacedKey] = existingTranslations[namespacedKey];
+          } else if (stringValue && stringValue.trim() !== '') {
+            // Use the value from partial file if existing is empty and partial has content
             mergedTranslations[namespacedKey] = stringValue;
+          } else {
+            // Use empty string for new keys
+            mergedTranslations[namespacedKey] = '';
           }
         });
         
