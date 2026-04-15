@@ -1,8 +1,18 @@
 import * as vscode from 'vscode';
 import { translationSubject } from '../extension';
 
-// Asset regex (moved from config/regex.ts)
-const ASSET_REGEX = /['"](assets\/[^'"]*)['"]/;
+function normalizePath(pathValue: string): string {
+  return pathValue
+    .replace(/\\/g, '/')
+    .replace(/^\.\//, '')
+    .replace(/\/+$/, '');
+}
+
+function getAssetRegex(assetPath: string): RegExp {
+  const normalized = normalizePath(assetPath);
+  const escapedAssetPath = escapeRegex(normalized);
+  return new RegExp(`['\"](${escapedAssetPath}\/[^'\"]*)['\"]`);
+}
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -73,6 +83,7 @@ function extractTranslationKey(match: RegExpMatchArray, languageId: string): { o
 
 export function createCompletionProvider(
   assetFiles: string[],
+  assetPath: string,
 ): vscode.CompletionItemProvider {
   return {
     provideCompletionItems(
@@ -89,7 +100,8 @@ export function createCompletionProvider(
       const line = document.lineAt(position);
       let lineText = line.text;
 
-      const assetMatches = lineText.match(ASSET_REGEX);
+      const assetRegex = getAssetRegex(assetPath);
+      const assetMatches = lineText.match(assetRegex);
 
       if (assetMatches) {
         const assetMatch = assetMatches[1];

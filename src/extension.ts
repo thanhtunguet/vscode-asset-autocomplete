@@ -45,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext) {
     return;
   }
   
-  const { projectType, assetPath } = config;
+  const { projectType, assetPathSetting } = config;
 
   // Show detected project type
   vscode.window.showInformationMessage(`Detected project type: ${projectType}`);
@@ -58,10 +58,10 @@ export async function activate(context: vscode.ExtensionContext) {
   }
   
   // Load asset files
-  const assetFiles = loadAssetFiles(workspacePath, assetPath);
+  const assetFiles = loadAssetFiles(workspacePath, assetPathSetting);
 
   // Register completion provider
-  const completionProvider = createCompletionProvider(assetFiles);
+  const completionProvider = createCompletionProvider(assetFiles, assetPathSetting);
 
   dartDisposableProvider = vscode.languages.registerCompletionItemProvider(
     'dart',
