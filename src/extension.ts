@@ -9,12 +9,27 @@ import {registerNativeExtractionCommands} from './registers/native_extraction_co
 import {registerJsonSortCommands} from './registers/json_sort_commands';
 import {BehaviorSubject} from 'rxjs';
 
+export interface TranslationKeyEntry {
+  key: string;
+  namespace?: string;
+}
+
+export interface ReversedTranslationKeyEntry {
+  value: string;
+  key: string;
+  namespace?: string;
+}
+
 export const translationSubject = new BehaviorSubject<{
   translationKeys: string[];
   reversedTranslationKeys: Record<string, string>[];
+  translationKeyEntries: TranslationKeyEntry[];
+  reversedTranslationKeyEntries: ReversedTranslationKeyEntry[];
 }>({
   translationKeys: [],
   reversedTranslationKeys: [],
+  translationKeyEntries: [],
+  reversedTranslationKeyEntries: [],
 });
 
 var dartDisposableProvider: vscode.Disposable | undefined;

@@ -1,7 +1,11 @@
 import * as fs from 'fs';
 import path from 'path';
 import { showLog } from '../helpers/log';
-import { translationSubject } from '../extension';
+import {
+  translationSubject,
+  type ReversedTranslationKeyEntry,
+  type TranslationKeyEntry,
+} from '../extension';
 import vscode from 'vscode';
 import { detectProjectType } from '../helpers/project_type';
 import { ProjectType } from '../types/ProjectType';
@@ -102,19 +106,48 @@ function parseLocaleJsonFile(filePath: string): any | null {
   }
 }
 
+function applyNamespaceStrategy(
+  key: string,
+  namespace: string | undefined,
+  mode: 'single' | 'multiple',
+  multipleModeConcatNamespace: boolean,
+): string {
+  if (mode !== 'multiple' || !namespace || !multipleModeConcatNamespace) {
+    return key;
+  }
+
+  if (key === namespace || key.startsWith(`${namespace}.`)) {
+    return key;
+  }
+
+  return `${namespace}.${key}`;
+}
+
+interface LocaleFileEntry {
+  filePath: string;
+  locale: string;
+  namespace?: string;
+}
+
 function getLocaleFiles(
   i18nPath: string,
   languages: string[],
   mode: 'single' | 'multiple',
   localeFileRegex: RegExp,
-): string[] {
+): LocaleFileEntry[] {
   if (mode === 'single') {
     return fs.readdirSync(i18nPath)
       .filter((file) => localeFileRegex.test(file))
-      .map((file) => path.join(i18nPath, file));
+      .map((file) => {
+        const locale = path.basename(file, path.extname(file));
+        return {
+          filePath: path.join(i18nPath, file),
+          locale,
+        };
+      });
   }
 
-  const localeFiles: string[] = [];
+  const localeFiles: LocaleFileEntry[] = [];
 
   languages.forEach((locale) => {
     const localeDir = path.join(i18nPath, locale);
@@ -125,7 +158,11 @@ function getLocaleFiles(
 
     const filesInLocale = fs.readdirSync(localeDir)
       .filter((file) => localeFileRegex.test(file))
-      .map((file) => path.join(localeDir, file));
+      .map((file) => ({
+        filePath: path.join(localeDir, file),
+        locale,
+        namespace: path.basename(file, path.extname(file)),
+      }));
 
     localeFiles.push(...filesInLocale);
   });
@@ -162,6 +199,11 @@ export function getWorkspaceConfig(workspacePath: string) {
     nameof(ExtensionConfig.prototype.localeFilePattern),
     '*.json',
   );
+
+  const multipleModeConcatNamespace = config.get<boolean>(
+    nameof(ExtensionConfig.prototype.multipleModeConcatNamespace),
+    false,
+  );
   
   const i18nPath = path.join(workspacePath, i18nPathSetting);
   
@@ -173,6 +215,7 @@ export function getWorkspaceConfig(workspacePath: string) {
     assetPathSetting,
     localeFileMode,
     localeFilePattern,
+    multipleModeConcatNamespace,
   };
 }
 
@@ -190,6 +233,7 @@ export function loadTranslationKeys(workspacePath: string): boolean {
     i18nPath,
     localeFileMode,
     localeFilePattern,
+    multipleModeConcatNamespace,
   } = config;
   
   if (!fs.existsSync(i18nPath)) {
@@ -204,31 +248,70 @@ export function loadTranslationKeys(workspacePath: string): boolean {
   );
 
   const localeFileRegex = buildLocaleFileRegex(localeFilePattern);
-  const files = getLocaleFiles(i18nPath, languages, localeFileMode, localeFileRegex);
+  const localeFiles = getLocaleFiles(i18nPath, languages, localeFileMode, localeFileRegex);
   
-  if (files.length === 0) {
+  if (localeFiles.length === 0) {
     showLog(`No translation files found in directory: ${i18nPath} (mode: ${localeFileMode}, pattern: ${localeFilePattern})`);
     return false;
   }
   
   const translationKeys: string[] = [];
   const reversedTranslationKeys: Record<string, string>[] = [];
+  const translationKeyEntries: TranslationKeyEntry[] = [];
+  const reversedTranslationKeyEntries: ReversedTranslationKeyEntry[] = [];
 
-  const firstJson = parseLocaleJsonFile(files[0]);
+  const firstEntry = localeFiles[0];
+  const firstJson = parseLocaleJsonFile(firstEntry.filePath);
   if (firstJson) {
-    extractKeys(firstJson, '', translationKeys);
+    const firstKeys: string[] = [];
+    extractKeys(firstJson, '', firstKeys);
+    firstKeys.forEach((key) => {
+      const finalKey = applyNamespaceStrategy(
+        key,
+        firstEntry.namespace,
+        localeFileMode,
+        multipleModeConcatNamespace,
+      );
+      translationKeys.push(finalKey);
+      translationKeyEntries.push({
+        key: finalKey,
+        namespace: firstEntry.namespace,
+      });
+    });
   }
   
-  files.forEach((filePath) => {
-    const json = parseLocaleJsonFile(filePath);
-    if (json) {
-      extractReversedKeys(json, reversedTranslationKeys);
+  localeFiles.forEach((entry) => {
+    const json = parseLocaleJsonFile(entry.filePath);
+    if (!json) {
+      return;
     }
+
+    const fileReversedKeys: Record<string, string>[] = [];
+    extractReversedKeys(json, fileReversedKeys);
+
+    fileReversedKeys.forEach((reversedEntry) => {
+      const [translationValue, translationKey] = Object.entries(reversedEntry)[0];
+      const finalKey = applyNamespaceStrategy(
+        translationKey,
+        entry.namespace,
+        localeFileMode,
+        multipleModeConcatNamespace,
+      );
+
+      reversedTranslationKeys.push({ [translationValue]: finalKey });
+      reversedTranslationKeyEntries.push({
+        value: translationValue,
+        key: finalKey,
+        namespace: entry.namespace,
+      });
+    });
   });
   
   translationSubject.next({
     translationKeys,
     reversedTranslationKeys,
+    translationKeyEntries,
+    reversedTranslationKeyEntries,
   });
   
   return true;

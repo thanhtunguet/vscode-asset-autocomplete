@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
-import { translationSubject } from '../extension';
+import {
+  translationSubject,
+  type ReversedTranslationKeyEntry,
+  type TranslationKeyEntry,
+} from '../extension';
 
 function normalizePath(pathValue: string): string {
   return pathValue
@@ -81,6 +85,43 @@ function extractTranslationKey(match: RegExpMatchArray, languageId: string): { o
   }
 }
 
+function createReplaceRange(position: vscode.Position, keyword: string): vscode.Range {
+  return new vscode.Range(position.translate(0, -keyword.length), position);
+}
+
+function rankByNamespaceMatch<T extends { namespace?: string }>(
+  entries: T[],
+  keyword: string,
+): T[] {
+  const lowerKeyword = keyword.toLowerCase();
+
+  return [...entries].sort((a, b) => {
+    const aNamespace = (a.namespace || '').toLowerCase();
+    const bNamespace = (b.namespace || '').toLowerCase();
+
+    const aMatches = aNamespace.startsWith(lowerKeyword) || lowerKeyword.startsWith(aNamespace);
+    const bMatches = bNamespace.startsWith(lowerKeyword) || lowerKeyword.startsWith(bNamespace);
+
+    if (aMatches && !bMatches) {
+      return -1;
+    }
+
+    if (!aMatches && bMatches) {
+      return 1;
+    }
+
+    return 0;
+  });
+}
+
+function matchesTranslationEntry(entry: TranslationKeyEntry, keyword: string): boolean {
+  return entry.key.startsWith(keyword) || (entry.namespace?.startsWith(keyword) ?? false);
+}
+
+function matchesReversedEntry(entry: ReversedTranslationKeyEntry, keyword: string): boolean {
+  return entry.value.startsWith(keyword) || (entry.namespace?.startsWith(keyword) ?? false);
+}
+
 export function createCompletionProvider(
   assetFiles: string[],
   assetPath: string,
@@ -93,6 +134,8 @@ export function createCompletionProvider(
       const {
         translationKeys,
         reversedTranslationKeys,
+        translationKeyEntries,
+        reversedTranslationKeyEntries,
       } = translationSubject.value;
       
       let suggestions: Array<vscode.CompletionItem> = [];
@@ -133,45 +176,56 @@ export function createCompletionProvider(
       const translationMatches = lineText.match(translationRegex);
 
       if (translationMatches) {
-        const { openingQuote, translationKey, closeQuote } = extractTranslationKey(translationMatches, document.languageId);
+        const { translationKey } = extractTranslationKey(translationMatches, document.languageId);
+
+        const keyEntriesToUse = translationKeyEntries.length > 0
+          ? translationKeyEntries
+          : translationKeys.map((key) => ({ key }));
+
+        const rankedTranslationEntries = rankByNamespaceMatch(
+          keyEntriesToUse.filter((entry) => matchesTranslationEntry(entry, translationKey)),
+          translationKey,
+        );
 
         suggestions = [
           ...suggestions,
-          ...translationKeys
-            .filter((key) => key.startsWith(translationKey))
-            .map((key) => {
-              const item = new vscode.CompletionItem(
-                key,
-                vscode.CompletionItemKind.Text,
-              );
-              item.insertText = `${key.replace(
-                translationKey,
-                '',
-              )}`;
-              return item;
-            }),
+          ...rankedTranslationEntries.map((entry) => {
+            const item = new vscode.CompletionItem(
+              entry.key,
+              vscode.CompletionItemKind.Text,
+            );
+
+            item.insertText = entry.key;
+            item.range = createReplaceRange(position, translationKey);
+            return item;
+          }),
         ];
 
+        const reversedEntriesToUse = reversedTranslationKeyEntries.length > 0
+          ? reversedTranslationKeyEntries
+          : reversedTranslationKeys.map((entry) => {
+            const [value, key] = Object.entries(entry)[0];
+            return { value, key };
+          });
+
+        const rankedReversedEntries = rankByNamespaceMatch(
+          reversedEntriesToUse.filter((entry) => matchesReversedEntry(entry, translationKey)),
+          translationKey,
+        );
+
         suggestions = [
           ...suggestions,
-          ...reversedTranslationKeys
-            .filter((entry) => {
-              const [key] = Object.entries(entry)[0];
-              return key.startsWith(translationKey);
-            })
-            .map((entry) => {
-              const [key, value] = Object.entries(entry)[0];
-              const item = new vscode.CompletionItem(
-                key,
-                vscode.CompletionItemKind.Text,
-              );
-              item.insertText = `${value.replace(
-                translationKey,
-                '',
-              )}`;
-              item.label = `${key} (${value})`;
-              return item;
-            }),
+          ...rankedReversedEntries.map((entry) => {
+            const item = new vscode.CompletionItem(
+              entry.value,
+              vscode.CompletionItemKind.Text,
+            );
+
+            item.insertText = entry.key;
+            item.range = createReplaceRange(position, translationKey);
+            item.label = `${entry.value} (${entry.key})`;
+            return item;
+          }),
         ];
       }
 

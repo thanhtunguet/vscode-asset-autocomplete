@@ -107,7 +107,15 @@ Add this configuration to your `.vscode/settings.json` file:
   "i18n-autocomplete.jsonPath": "assets/i18n",
   "i18n-autocomplete.languages": ["en", "vi"],
   "i18n-autocomplete.localeFileMode": "multiple",
-  "i18n-autocomplete.localeFilePattern": "*.json"
+  "i18n-autocomplete.localeFilePattern": "*.json",
+  "i18n-autocomplete.multipleModeConcatNamespace": false
+}
+```
+
+Nếu muốn tự thêm namespace khi key thiếu namespace trong multiple mode:
+```json
+{
+  "i18n-autocomplete.multipleModeConcatNamespace": true
 }
 ```
 
@@ -123,6 +131,7 @@ Add this configuration to your `.vscode/settings.json` file:
 | `i18n-autocomplete.translationFunctions` | Function names used for translation matching | `["t", "translate"]` |
 | `i18n-autocomplete.localeFileMode` | Locale file layout mode: single or multiple | `"multiple"` |
 | `i18n-autocomplete.localeFilePattern` | Locale filename pattern (glob-like or regex literal) | `"*.json"` |
+| `i18n-autocomplete.multipleModeConcatNamespace` | In multiple mode, auto-prefix namespace from filename when key is missing namespace | `false` |
 | `i18n-autocomplete.assetPath` | Path to your asset folder | `"assets"` |
 
 ---
