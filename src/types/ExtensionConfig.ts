@@ -1,18 +1,11 @@
 export interface LanguageConfig {
-  code: string;                    // Language code: "en", "vi", etc.
-  sourceDirs: string[];           // Source directories to scan: ["src/", "lib/", "components/"]
-  targetPath: string;             // Target path for partial files: "assets/i18n/en/"
-  mainFilePath: string;           // Main translation file: "assets/i18n/en.json"
-  regex?: string;                 // Custom regex pattern (optional, falls back to language defaults)
-}
-
-// Simplified language config for internal use
-export interface LanguageConfig {
   code: string;                        // Language code: "en", "vi", etc.
   sourceDirs: string[];               // Source directories to scan
   targetPath: string;                 // Target path for partial files
   mainFilePath: string;               // Main translation file path
   projectLanguage: 'dart' | 'typescript'; // Project language type
+  regex?: string;                     // Custom regex pattern (optional)
+  translationFunctions?: string[];    // Translation function names to match
 }
 
 export class ExtensionConfig {
@@ -25,4 +18,5 @@ export class ExtensionConfig {
   projectLanguage?: 'dart' | 'typescript';  // Project type: "dart" or "typescript"
   sourceDirs?: string[];               // Source directories to scan: ["src/", "lib/", "components/"]
   excludePatterns?: string[];          // Patterns to exclude: ["**/*.test.ts", "**/node_modules/**"]
+  translationFunctions?: string[];     // Translation function names (e.g., ["t", "translate"])
 }

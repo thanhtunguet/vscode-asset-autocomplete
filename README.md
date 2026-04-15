@@ -96,6 +96,7 @@ Add this configuration to your `.vscode/settings.json` file:
 | `i18n-autocomplete.jsonPath` | Path to the i18n translation folder | `"assets/i18n"` |
 | `i18n-autocomplete.sourceDirs` | Source directories to scan for translations | `["src/"]` |
 | `i18n-autocomplete.excludePatterns` | Files/folders to exclude from scanning | `["**/*.test.ts", "**/node_modules/**"]` |
+| `i18n-autocomplete.translationFunctions` | Function names used for translation matching | `["t", "translate"]` |
 | `i18n-autocomplete.assetPath` | Path to your asset folder | `"assets"` |
 
 ---

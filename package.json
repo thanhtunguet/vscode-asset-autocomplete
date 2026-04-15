@@ -145,6 +145,17 @@
             "**/build/**"
           ],
           "description": "Glob patterns for files and directories to exclude from scanning"
+        },
+        "i18n-autocomplete.translationFunctions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "t",
+            "translate"
+          ],
+          "description": "Function names used to detect translation keys (e.g., t, translate, i18n.t)"
         }
       }
     }

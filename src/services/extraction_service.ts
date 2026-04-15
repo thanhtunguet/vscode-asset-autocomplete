@@ -409,6 +409,7 @@ export class ExtractionService {
     const jsonPath = config.get<string>('jsonPath', 'assets/i18n');
     const sourceDirs = config.get<string[]>('sourceDirs', ['src/']);
     const projectLanguage = config.get<'dart' | 'typescript'>('projectLanguage', 'typescript');
+    const translationFunctions = config.get<string[]>('translationFunctions', ['t', 'translate']);
     
     return languages.map(code => ({
       code,
@@ -416,6 +417,7 @@ export class ExtractionService {
       targetPath: `${jsonPath}/${code}/`,
       mainFilePath: `${jsonPath}/${code}.json`,
       projectLanguage,
+      translationFunctions,
     }));
   }
 

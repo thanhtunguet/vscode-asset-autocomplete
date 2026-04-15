@@ -27,6 +27,19 @@ export abstract class BaseTranslationExtractor {
   
   protected abstract getRegexPattern(): RegExp;
 
+  protected getTranslationFunctionNames(): string[] {
+    const configured = this.languageConfig.translationFunctions;
+    if (!configured || configured.length === 0) {
+      return ['t', 'translate'];
+    }
+
+    return configured.map(name => name.trim()).filter(Boolean);
+  }
+
+  protected escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   /**
    * Extract translations from file content using regex
    */
@@ -78,13 +91,17 @@ export class DartTranslationExtractor extends BaseTranslationExtractor {
       return new RegExp(this.languageConfig.regex, 'g');
     }
 
+    const functionPattern = this.getTranslationFunctionNames()
+      .map(name => this.escapeRegex(name))
+      .join('|');
+
     // Enhanced Dart pattern to handle optional second argument (map):
     // Examples:
-    // translate('key') 
-    // translate('key', {})
+    // t('key'), translate('key')
+    // t('key', {})
     // translate('key', {'param': value})
     // translate('key', {'param': value, 'other': otherValue})
-    return /translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/g;
+    return new RegExp(`\\b(?:${functionPattern})\\s*\\(\\s*'([A-Za-z0-9$\\{\\}\\.]+)'\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`, 'g');
   }
 
   protected extractKey(match: RegExpExecArray): string | null {
@@ -125,6 +142,10 @@ export class TypeScriptTranslationExtractor extends BaseTranslationExtractor {
       return new RegExp(this.languageConfig.regex, 'g');
     }
 
+    const functionPattern = this.getTranslationFunctionNames()
+      .map(name => this.escapeRegex(name))
+      .join('|');
+
     // Enhanced TypeScript/JavaScript pattern to handle optional second argument (object):
     // Examples:
     // t('key'), translate('key')
@@ -132,7 +153,7 @@ export class TypeScriptTranslationExtractor extends BaseTranslationExtractor {
     // t(`key`), translate(`key`)
     // t('key', {}), translate('key', {})
     // t('key', {param: value}), translate('key', {param: value, other: 'test'})
-    return /\bt(?:ranslate)?\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/g;
+    return new RegExp(`\\b(?:${functionPattern})\\s*\\(\\s*(['"\`])([^'"\`]+)\\1\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`, 'g');
   }
 
   protected extractKey(match: RegExpExecArray): string | null {

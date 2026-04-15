@@ -4,21 +4,43 @@ import { translationSubject } from '../extension';
 // Asset regex (moved from config/regex.ts)
 const ASSET_REGEX = /['"](assets\/[^'"]*)['"]/;
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getTranslationFunctions(): string[] {
+  const config = vscode.workspace.getConfiguration('i18n-autocomplete');
+  const configured = config.get<string[]>('translationFunctions', ['t', 'translate']);
+
+  if (!configured || configured.length === 0) {
+    return ['t', 'translate'];
+  }
+
+  return configured.map(name => name.trim()).filter(Boolean);
+}
+
 /**
  * Get translation regex based on file language
  */
-function getTranslationRegex(languageId: string): RegExp {
+function getTranslationRegex(languageId: string, translationFunctions: string[]): RegExp {
+  const functionPattern = translationFunctions
+    .map(name => escapeRegex(name))
+    .join('|');
+
+  const dartPattern = `\\b(?:${functionPattern})\\s*\\(\\s*'([A-Za-z0-9$\\{\\}\\.]+)'\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`;
+  const tsPattern = `\\b(?:${functionPattern})\\s*\\(\\s*(['"\`])([^'"\`]+)\\1\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`;
+
   switch (languageId) {
     case 'dart':
       // Enhanced Dart pattern with optional second argument (map)
-      return /translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/;
+      return new RegExp(dartPattern);
     case 'typescript':
     case 'javascript':
       // Enhanced TypeScript/JavaScript pattern with optional second argument (object)
-      return /\bt(?:ranslate)?\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/;
+      return new RegExp(tsPattern);
     default:
       // Fallback pattern for unknown languages
-      return /\bt(?:ranslate)?\s*\(\s*(['"`])([^'"`]+)\1\s*(?:,\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})?\s*\)/;
+      return new RegExp(tsPattern);
   }
 }
 
@@ -94,7 +116,8 @@ export function createCompletionProvider(
       const previousLineText = document.lineAt(previousLine).text;
       lineText = `${previousLineText} ${lineText}`;
 
-      const translationRegex = getTranslationRegex(document.languageId);
+      const translationFunctions = getTranslationFunctions();
+      const translationRegex = getTranslationRegex(document.languageId, translationFunctions);
       const translationMatches = lineText.match(translationRegex);
 
       if (translationMatches) {
