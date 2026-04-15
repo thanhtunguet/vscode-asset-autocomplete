@@ -16,6 +16,7 @@ export class ExtensionConfig {
   localeFileMode?: 'single' | 'multiple'; // Translation file organization mode
   localeFilePattern?: string;          // Locale filename pattern (glob-like or regex)
   multipleModeConcatNamespace?: boolean; // In multiple mode, whether to prefix namespace into keys
+  preferredTranslationLanguage?: string; // Preferred language code for displayed translation text
   
   // New multi-directory scanning configuration
   projectLanguage?: 'dart' | 'typescript';  // Project type: "dart" or "typescript"

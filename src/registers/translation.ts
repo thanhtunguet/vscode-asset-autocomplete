@@ -11,35 +11,6 @@ import { detectProjectType } from '../helpers/project_type';
 import { ProjectType } from '../types/ProjectType';
 import { ExtensionConfig } from '../types/ExtensionConfig';
 
-export function extractKeys(obj: any, prefix: string, keys: string[]): void {
-  for (const key in obj) {
-    if (typeof obj[key] === 'object' && obj[key] !== null) {
-      extractKeys(obj[key], `${prefix}${key}.`, keys);
-    } else {
-      keys.push(`${prefix}${key}`);
-    }
-  }
-}
-
-export function extractReversedKeys(
-  obj: any,
-  keys: Record<string, string>[],
-): void {
-  for (const key in obj) {
-    const value = obj[key];
-
-    if (typeof value === 'object' && obj[key] !== null) {
-      extractReversedKeys(obj[key], keys);
-    } else {
-      if (typeof value === 'string') {
-        keys.push({
-          [value]: key,
-        });
-      }
-    }
-  }
-}
-
 /**
  * Get default paths based on project type
  */
@@ -104,6 +75,76 @@ function parseLocaleJsonFile(filePath: string): any | null {
     showLog('Error parsing translation file: ' + filePath);
     return null;
   }
+}
+
+function extractKeyValuePairs(
+  obj: any,
+  prefix: string,
+  pairs: Array<{ key: string; value: string }>,
+): void {
+  for (const key in obj) {
+    const value = obj[key];
+    const fullKey = `${prefix}${key}`;
+
+    if (typeof value === 'object' && value !== null) {
+      extractKeyValuePairs(value, `${fullKey}.`, pairs);
+      continue;
+    }
+
+    if (typeof value === 'string') {
+      pairs.push({
+        key: fullKey,
+        value,
+      });
+    }
+  }
+}
+
+function buildLocalePriority(
+  preferredTranslationLanguage: string | undefined,
+  configuredLanguages: string[],
+  discoveredLocales: string[],
+): string[] {
+  const localePriority: string[] = [];
+
+  if (preferredTranslationLanguage && preferredTranslationLanguage.trim()) {
+    localePriority.push(preferredTranslationLanguage.trim());
+  }
+
+  configuredLanguages.forEach((locale) => {
+    if (!localePriority.includes(locale)) {
+      localePriority.push(locale);
+    }
+  });
+
+  discoveredLocales.forEach((locale) => {
+    if (!localePriority.includes(locale)) {
+      localePriority.push(locale);
+    }
+  });
+
+  return localePriority;
+}
+
+function pickPreferredTranslation(
+  translationsByLocale: Map<string, string>,
+  localePriority: string[],
+): string {
+  for (const locale of localePriority) {
+    const value = translationsByLocale.get(locale);
+    if (value !== undefined && value !== '') {
+      return value;
+    }
+  }
+
+  for (const value of translationsByLocale.values()) {
+    if (value !== '') {
+      return value;
+    }
+  }
+
+  const firstValue = translationsByLocale.values().next();
+  return firstValue.done ? '' : firstValue.value;
 }
 
 function applyNamespaceStrategy(
@@ -204,6 +245,11 @@ export function getWorkspaceConfig(workspacePath: string) {
     nameof(ExtensionConfig.prototype.multipleModeConcatNamespace),
     false,
   );
+
+  const preferredTranslationLanguage = config.get<string>(
+    nameof(ExtensionConfig.prototype.preferredTranslationLanguage),
+    '',
+  );
   
   const i18nPath = path.join(workspacePath, i18nPathSetting);
   
@@ -216,6 +262,7 @@ export function getWorkspaceConfig(workspacePath: string) {
     localeFileMode,
     localeFilePattern,
     multipleModeConcatNamespace,
+    preferredTranslationLanguage,
   };
 }
 
@@ -234,6 +281,7 @@ export function loadTranslationKeys(workspacePath: string): boolean {
     localeFileMode,
     localeFilePattern,
     multipleModeConcatNamespace,
+    preferredTranslationLanguage,
   } = config;
   
   if (!fs.existsSync(i18nPath)) {
@@ -260,50 +308,60 @@ export function loadTranslationKeys(workspacePath: string): boolean {
   const translationKeyEntries: TranslationKeyEntry[] = [];
   const reversedTranslationKeyEntries: ReversedTranslationKeyEntry[] = [];
 
-  const firstEntry = localeFiles[0];
-  const firstJson = parseLocaleJsonFile(firstEntry.filePath);
-  if (firstJson) {
-    const firstKeys: string[] = [];
-    extractKeys(firstJson, '', firstKeys);
-    firstKeys.forEach((key) => {
-      const finalKey = applyNamespaceStrategy(
-        key,
-        firstEntry.namespace,
-        localeFileMode,
-        multipleModeConcatNamespace,
-      );
-      translationKeys.push(finalKey);
-      translationKeyEntries.push({
-        key: finalKey,
-        namespace: firstEntry.namespace,
-      });
-    });
-  }
-  
+  const distinctKeyMap = new Map<string, { namespace?: string; translationsByLocale: Map<string, string> }>();
+  const discoveredLocales: string[] = [];
+
   localeFiles.forEach((entry) => {
+    if (!discoveredLocales.includes(entry.locale)) {
+      discoveredLocales.push(entry.locale);
+    }
+
     const json = parseLocaleJsonFile(entry.filePath);
     if (!json) {
       return;
     }
 
-    const fileReversedKeys: Record<string, string>[] = [];
-    extractReversedKeys(json, fileReversedKeys);
+    const pairs: Array<{ key: string; value: string }> = [];
+    extractKeyValuePairs(json, '', pairs);
 
-    fileReversedKeys.forEach((reversedEntry) => {
-      const [translationValue, translationKey] = Object.entries(reversedEntry)[0];
+    pairs.forEach(({ key, value }) => {
       const finalKey = applyNamespaceStrategy(
-        translationKey,
+        key,
         entry.namespace,
         localeFileMode,
         multipleModeConcatNamespace,
       );
 
-      reversedTranslationKeys.push({ [translationValue]: finalKey });
-      reversedTranslationKeyEntries.push({
-        value: translationValue,
-        key: finalKey,
+      const existing = distinctKeyMap.get(finalKey) || {
         namespace: entry.namespace,
-      });
+        translationsByLocale: new Map<string, string>(),
+      };
+
+      if (!existing.namespace && entry.namespace) {
+        existing.namespace = entry.namespace;
+      }
+
+      existing.translationsByLocale.set(entry.locale, value);
+      distinctKeyMap.set(finalKey, existing);
+    });
+  });
+
+  const localePriority = buildLocalePriority(preferredTranslationLanguage, languages, discoveredLocales);
+
+  distinctKeyMap.forEach((entry, key) => {
+    const preferredValue = pickPreferredTranslation(entry.translationsByLocale, localePriority);
+
+    translationKeys.push(key);
+    translationKeyEntries.push({
+      key,
+      namespace: entry.namespace,
+    });
+
+    reversedTranslationKeys.push({ [preferredValue]: key });
+    reversedTranslationKeyEntries.push({
+      value: preferredValue,
+      key,
+      namespace: entry.namespace,
     });
   });
   

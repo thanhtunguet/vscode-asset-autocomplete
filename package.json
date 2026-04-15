@@ -175,6 +175,11 @@
           "type": "boolean",
           "default": false,
           "description": "In localeFileMode=multiple, prefix namespace (filename) into key when missing (e.g. title -> home.title)."
+        },
+        "i18n-autocomplete.preferredTranslationLanguage": {
+          "type": "string",
+          "default": "",
+          "description": "Preferred language code for displayed translation text in autocomplete. Falls back to configured order and then any available translation."
         }
       }
     }
