@@ -89,37 +89,98 @@ function createReplaceRange(position: vscode.Position, keyword: string): vscode.
   return new vscode.Range(position.translate(0, -keyword.length), position);
 }
 
-function rankByNamespaceMatch<T extends { namespace?: string }>(
+function extractNamespaceSearchToken(keyword: string): string {
+  const token = keyword.trim();
+  if (!token) {
+    return '';
+  }
+
+  const firstDotIndex = token.indexOf('.');
+  if (firstDotIndex === -1) {
+    return token.toLowerCase();
+  }
+
+  return token.slice(0, firstDotIndex).toLowerCase();
+}
+
+function getNamespaceMatchScore(namespace: string, token: string): number {
+  if (!namespace || !token) {
+    return 0;
+  }
+
+  if (namespace === token) {
+    return 3;
+  }
+
+  if (namespace.startsWith(token) || token.startsWith(namespace)) {
+    return 2;
+  }
+
+  if (namespace.includes(token) || token.includes(namespace)) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function rankByNamespaceMatch<T extends { namespace?: string; key?: string; value?: string }>(
   entries: T[],
   keyword: string,
 ): T[] {
-  const lowerKeyword = keyword.toLowerCase();
+  const token = extractNamespaceSearchToken(keyword);
 
   return [...entries].sort((a, b) => {
     const aNamespace = (a.namespace || '').toLowerCase();
     const bNamespace = (b.namespace || '').toLowerCase();
 
-    const aMatches = aNamespace.startsWith(lowerKeyword) || lowerKeyword.startsWith(aNamespace);
-    const bMatches = bNamespace.startsWith(lowerKeyword) || lowerKeyword.startsWith(bNamespace);
-
-    if (aMatches && !bMatches) {
-      return -1;
+    const scoreDiff = getNamespaceMatchScore(bNamespace, token) - getNamespaceMatchScore(aNamespace, token);
+    if (scoreDiff !== 0) {
+      return scoreDiff;
     }
 
-    if (!aMatches && bMatches) {
-      return 1;
+    const aKey = (a.key || '').toLowerCase();
+    const bKey = (b.key || '').toLowerCase();
+    if (aKey !== bKey) {
+      return aKey.localeCompare(bKey);
     }
 
-    return 0;
+    const aValue = (a.value || '').toLowerCase();
+    const bValue = (b.value || '').toLowerCase();
+    return aValue.localeCompare(bValue);
   });
 }
 
-function matchesTranslationEntry(entry: TranslationKeyEntry, keyword: string): boolean {
-  return entry.key.startsWith(keyword) || (entry.namespace?.startsWith(keyword) ?? false);
+function matchesReversedEntry(entry: ReversedTranslationKeyEntry, keyword: string): boolean {
+  return entry.key.startsWith(keyword)
+    || entry.value.startsWith(keyword)
+    || (entry.namespace?.startsWith(keyword) ?? false);
 }
 
-function matchesReversedEntry(entry: ReversedTranslationKeyEntry, keyword: string): boolean {
-  return entry.value.startsWith(keyword) || (entry.namespace?.startsWith(keyword) ?? false);
+function buildFullInsertKey(entry: { key: string; namespace?: string }): string {
+  if (!entry.namespace) {
+    return entry.key;
+  }
+
+  if (entry.key === entry.namespace || entry.key.startsWith(`${entry.namespace}.`)) {
+    return entry.key;
+  }
+
+  return `${entry.namespace}.${entry.key}`;
+}
+
+function buildCompletionLabel(
+  entry: { key: string; namespace?: string },
+  translatedText: string,
+  localeFileMode: 'single' | 'multiple',
+  multipleModeConcatNamespace: boolean,
+): string {
+  const fullKey = buildFullInsertKey(entry);
+
+  if (localeFileMode === 'multiple' && !multipleModeConcatNamespace && entry.namespace) {
+    return `${entry.namespace} (${entry.key}): ${translatedText}`;
+  }
+
+  return `${fullKey}: ${translatedText}`;
 }
 
 export function createCompletionProvider(
@@ -132,10 +193,10 @@ export function createCompletionProvider(
       position: vscode.Position,
     ): vscode.CompletionItem[] | undefined {
       const {
-        translationKeys,
         reversedTranslationKeys,
-        translationKeyEntries,
         reversedTranslationKeyEntries,
+        localeFileMode,
+        multipleModeConcatNamespace,
       } = translationSubject.value;
       
       let suggestions: Array<vscode.CompletionItem> = [];
@@ -178,34 +239,15 @@ export function createCompletionProvider(
       if (translationMatches) {
         const { translationKey } = extractTranslationKey(translationMatches, document.languageId);
 
-        const keyEntriesToUse = translationKeyEntries.length > 0
-          ? translationKeyEntries
-          : translationKeys.map((key) => ({ key }));
-
-        const rankedTranslationEntries = rankByNamespaceMatch(
-          keyEntriesToUse.filter((entry) => matchesTranslationEntry(entry, translationKey)),
-          translationKey,
-        );
-
-        suggestions = [
-          ...suggestions,
-          ...rankedTranslationEntries.map((entry) => {
-            const item = new vscode.CompletionItem(
-              entry.key,
-              vscode.CompletionItemKind.Text,
-            );
-
-            item.insertText = entry.key;
-            item.range = createReplaceRange(position, translationKey);
-            return item;
-          }),
-        ];
-
-        const reversedEntriesToUse = reversedTranslationKeyEntries.length > 0
+        const reversedEntriesToUse: ReversedTranslationKeyEntry[] = reversedTranslationKeyEntries.length > 0
           ? reversedTranslationKeyEntries
           : reversedTranslationKeys.map((entry) => {
             const [value, key] = Object.entries(entry)[0];
-            return { value, key };
+            return {
+              value,
+              key,
+              namespace: undefined,
+            };
           });
 
         const rankedReversedEntries = rankByNamespaceMatch(
@@ -221,9 +263,15 @@ export function createCompletionProvider(
               vscode.CompletionItemKind.Text,
             );
 
-            item.insertText = entry.key;
+            const fullKey = buildFullInsertKey(entry);
+            item.insertText = fullKey;
             item.range = createReplaceRange(position, translationKey);
-            item.label = `${entry.value} (${entry.key})`;
+            item.label = buildCompletionLabel(
+              entry,
+              entry.value,
+              localeFileMode,
+              multipleModeConcatNamespace,
+            );
             return item;
           }),
         ];

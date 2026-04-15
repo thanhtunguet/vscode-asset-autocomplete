@@ -25,11 +25,15 @@ export const translationSubject = new BehaviorSubject<{
   reversedTranslationKeys: Record<string, string>[];
   translationKeyEntries: TranslationKeyEntry[];
   reversedTranslationKeyEntries: ReversedTranslationKeyEntry[];
+  localeFileMode: 'single' | 'multiple';
+  multipleModeConcatNamespace: boolean;
 }>({
   translationKeys: [],
   reversedTranslationKeys: [],
   translationKeyEntries: [],
   reversedTranslationKeyEntries: [],
+  localeFileMode: 'multiple',
+  multipleModeConcatNamespace: false,
 });
 
 var dartDisposableProvider: vscode.Disposable | undefined;

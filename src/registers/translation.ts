@@ -312,6 +312,8 @@ export function loadTranslationKeys(workspacePath: string): boolean {
     reversedTranslationKeys,
     translationKeyEntries,
     reversedTranslationKeyEntries,
+    localeFileMode,
+    multipleModeConcatNamespace,
   });
   
   return true;
