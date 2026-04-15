@@ -156,6 +156,20 @@
             "translate"
           ],
           "description": "Function names used to detect translation keys (e.g., t, translate, i18n.t)"
+        },
+        "i18n-autocomplete.localeFileMode": {
+          "type": "string",
+          "enum": [
+            "single",
+            "multiple"
+          ],
+          "default": "multiple",
+          "description": "Translation file layout: single (jsonPath/<locale>.ext) or multiple (jsonPath/<locale>/*.<ext>)"
+        },
+        "i18n-autocomplete.localeFilePattern": {
+          "type": "string",
+          "default": "*.json",
+          "description": "Pattern to match locale files by name. Supports glob-like patterns (*.json, *.arb) or regex literal (/^.*\\.arb$/i)."
         }
       }
     }

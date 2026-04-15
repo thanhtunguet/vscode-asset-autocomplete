@@ -51,6 +51,8 @@ Add this configuration to your `.vscode/settings.json` file:
   "i18n-autocomplete.languages": ["en", "vi"],
   "i18n-autocomplete.projectLanguage": "dart",
   "i18n-autocomplete.jsonPath": "assets/i18n",
+  "i18n-autocomplete.localeFileMode": "multiple",
+  "i18n-autocomplete.localeFilePattern": "*.json",
   "i18n-autocomplete.sourceDirs": ["lib/", "src/"],
   "i18n-autocomplete.excludePatterns": [
     "**/*.test.dart",
@@ -67,6 +69,8 @@ Add this configuration to your `.vscode/settings.json` file:
   "i18n-autocomplete.languages": ["en", "vi"],
   "i18n-autocomplete.projectLanguage": "typescript",
   "i18n-autocomplete.jsonPath": "src/locales",
+  "i18n-autocomplete.localeFileMode": "multiple",
+  "i18n-autocomplete.localeFilePattern": "*.json",
   "i18n-autocomplete.sourceDirs": ["src/", "components/", "pages/"],
   "i18n-autocomplete.excludePatterns": [
     "**/*.test.ts",
@@ -87,6 +91,26 @@ Add this configuration to your `.vscode/settings.json` file:
 }
 ```
 
+#### Single file per locale (e.g. `assets/i18n/en.arb`):
+```json
+{
+  "i18n-autocomplete.jsonPath": "assets/i18n",
+  "i18n-autocomplete.languages": ["en", "vi"],
+  "i18n-autocomplete.localeFileMode": "single",
+  "i18n-autocomplete.localeFilePattern": "*.arb"
+}
+```
+
+#### Multiple files per locale (default, e.g. `assets/i18n/en/*.json`):
+```json
+{
+  "i18n-autocomplete.jsonPath": "assets/i18n",
+  "i18n-autocomplete.languages": ["en", "vi"],
+  "i18n-autocomplete.localeFileMode": "multiple",
+  "i18n-autocomplete.localeFilePattern": "*.json"
+}
+```
+
 ### Configuration Settings
 
 | Setting | Description | Default |
@@ -97,6 +121,8 @@ Add this configuration to your `.vscode/settings.json` file:
 | `i18n-autocomplete.sourceDirs` | Source directories to scan for translations | `["src/"]` |
 | `i18n-autocomplete.excludePatterns` | Files/folders to exclude from scanning | `["**/*.test.ts", "**/node_modules/**"]` |
 | `i18n-autocomplete.translationFunctions` | Function names used for translation matching | `["t", "translate"]` |
+| `i18n-autocomplete.localeFileMode` | Locale file layout mode: single or multiple | `"multiple"` |
+| `i18n-autocomplete.localeFilePattern` | Locale filename pattern (glob-like or regex literal) | `"*.json"` |
 | `i18n-autocomplete.assetPath` | Path to your asset folder | `"assets"` |
 
 ---

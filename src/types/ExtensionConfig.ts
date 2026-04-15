@@ -13,6 +13,8 @@ export class ExtensionConfig {
   jsonPath?: string;                    // Path to i18n files (e.g., "assets/i18n")
   assetPath?: string;                  // Path to assets
   languages?: string[];                // Simple array of language codes: ["en", "vi", "fr"]
+  localeFileMode?: 'single' | 'multiple'; // Translation file organization mode
+  localeFilePattern?: string;          // Locale filename pattern (glob-like or regex)
   
   // New multi-directory scanning configuration
   projectLanguage?: 'dart' | 'typescript';  // Project type: "dart" or "typescript"
