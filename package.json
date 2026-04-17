@@ -112,6 +112,17 @@
           ],
           "description": "List of language codes for extraction commands"
         },
+        "i18n-autocomplete.autoReloadOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reload translation keys when locale files change."
+        },
+        "i18n-autocomplete.reloadIntervalMs": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Periodic translation reload interval in milliseconds. Set 0 to disable. Values between 1 and 999 are clamped to 1000."
+        },
         "i18n-autocomplete.projectLanguage": {
           "type": "string",
           "enum": [

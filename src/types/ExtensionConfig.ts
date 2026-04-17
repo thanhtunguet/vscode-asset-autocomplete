@@ -13,6 +13,8 @@ export class ExtensionConfig {
   jsonPath?: string;                    // Path to i18n files (e.g., "assets/i18n")
   assetPath?: string;                  // Path to assets
   languages?: string[];                // Simple array of language codes: ["en", "vi", "fr"]
+  autoReloadOnSave?: boolean;          // Reload translation keys when locale files change
+  reloadIntervalMs?: number;           // Optional polling interval for translation reloads (0 disables)
   localeFileMode?: 'single' | 'multiple'; // Translation file organization mode
   localeFilePattern?: string;          // Locale filename pattern (glob-like or regex)
   multipleModeConcatNamespace?: boolean; // In multiple mode, whether to prefix namespace into keys
