@@ -6,10 +6,7 @@ import {
 } from '../extension';
 
 function normalizePath(pathValue: string): string {
-  return pathValue
-    .replace(/\\/g, '/')
-    .replace(/^\.\//, '')
-    .replace(/\/+$/, '');
+  return pathValue.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/, '');
 }
 
 function getAssetRegex(assetPath: string): RegExp {
@@ -24,21 +21,27 @@ function escapeRegex(value: string): string {
 
 function getTranslationFunctions(): string[] {
   const config = vscode.workspace.getConfiguration('i18n-autocomplete');
-  const configured = config.get<string[]>('translationFunctions', ['t', 'translate']);
+  const configured = config.get<string[]>('translationFunctions', [
+    't',
+    'translate',
+  ]);
 
   if (!configured || configured.length === 0) {
     return ['t', 'translate'];
   }
 
-  return configured.map(name => name.trim()).filter(Boolean);
+  return configured.map((name) => name.trim()).filter(Boolean);
 }
 
 /**
  * Get translation regex based on file language
  */
-function getTranslationRegex(languageId: string, translationFunctions: string[]): RegExp {
+function getTranslationRegex(
+  languageId: string,
+  translationFunctions: string[],
+): RegExp {
   const functionPattern = translationFunctions
-    .map(name => escapeRegex(name))
+    .map((name) => escapeRegex(name))
     .join('|');
 
   const dartPattern = `\\b(?:${functionPattern})\\s*\\(\\s*'([A-Za-z0-9$\\{\\}\\.]+)'\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`;
@@ -61,7 +64,10 @@ function getTranslationRegex(languageId: string, translationFunctions: string[])
 /**
  * Extract translation key from regex match based on language
  */
-function extractTranslationKey(match: RegExpMatchArray, languageId: string): { openingQuote: string; translationKey: string; closeQuote: string } {
+function extractTranslationKey(
+  match: RegExpMatchArray,
+  languageId: string,
+): {openingQuote: string; translationKey: string; closeQuote: string} {
   switch (languageId) {
     case 'dart':
       return {
@@ -85,7 +91,10 @@ function extractTranslationKey(match: RegExpMatchArray, languageId: string): { o
   }
 }
 
-function createReplaceRange(position: vscode.Position, keyword: string): vscode.Range {
+function createReplaceRange(
+  position: vscode.Position,
+  keyword: string,
+): vscode.Range {
   return new vscode.Range(position.translate(0, -keyword.length), position);
 }
 
@@ -123,17 +132,18 @@ function getNamespaceMatchScore(namespace: string, token: string): number {
   return 0;
 }
 
-function rankByNamespaceMatch<T extends { namespace?: string; key?: string; value?: string }>(
-  entries: T[],
-  keyword: string,
-): T[] {
+function rankByNamespaceMatch<
+  T extends {namespace?: string; key?: string; value?: string},
+>(entries: T[], keyword: string): T[] {
   const token = extractNamespaceSearchToken(keyword);
 
   return [...entries].sort((a, b) => {
     const aNamespace = (a.namespace || '').toLowerCase();
     const bNamespace = (b.namespace || '').toLowerCase();
 
-    const scoreDiff = getNamespaceMatchScore(bNamespace, token) - getNamespaceMatchScore(aNamespace, token);
+    const scoreDiff =
+      getNamespaceMatchScore(bNamespace, token) -
+      getNamespaceMatchScore(aNamespace, token);
     if (scoreDiff !== 0) {
       return scoreDiff;
     }
@@ -150,18 +160,26 @@ function rankByNamespaceMatch<T extends { namespace?: string; key?: string; valu
   });
 }
 
-function matchesReversedEntry(entry: ReversedTranslationKeyEntry, keyword: string): boolean {
-  return entry.key.startsWith(keyword)
-    || entry.value.startsWith(keyword)
-    || (entry.namespace?.startsWith(keyword) ?? false);
+function matchesReversedEntry(
+  entry: ReversedTranslationKeyEntry,
+  keyword: string,
+): boolean {
+  return (
+    entry.key.startsWith(keyword) ||
+    entry.value.startsWith(keyword) ||
+    (entry.namespace?.startsWith(keyword) ?? false)
+  );
 }
 
-function buildFullInsertKey(entry: { key: string; namespace?: string }): string {
+function buildFullInsertKey(entry: {key: string; namespace?: string}): string {
   if (!entry.namespace) {
     return entry.key;
   }
 
-  if (entry.key === entry.namespace || entry.key.startsWith(`${entry.namespace}.`)) {
+  if (
+    entry.key === entry.namespace ||
+    entry.key.startsWith(`${entry.namespace}.`)
+  ) {
     return entry.key;
   }
 
@@ -169,14 +187,18 @@ function buildFullInsertKey(entry: { key: string; namespace?: string }): string 
 }
 
 function buildCompletionLabel(
-  entry: { key: string; namespace?: string },
+  entry: {key: string; namespace?: string},
   translatedText: string,
   localeFileMode: 'single' | 'multiple',
   multipleModeConcatNamespace: boolean,
 ): string {
   const fullKey = buildFullInsertKey(entry);
 
-  if (localeFileMode === 'multiple' && !multipleModeConcatNamespace && entry.namespace) {
+  if (
+    localeFileMode === 'multiple' &&
+    !multipleModeConcatNamespace &&
+    entry.namespace
+  ) {
     return `${entry.namespace} (${entry.key}): ${translatedText}`;
   }
 
@@ -198,7 +220,7 @@ export function createCompletionProvider(
         localeFileMode,
         multipleModeConcatNamespace,
       } = translationSubject.value;
-      
+
       let suggestions: Array<vscode.CompletionItem> = [];
 
       const line = document.lineAt(position);
@@ -233,25 +255,34 @@ export function createCompletionProvider(
       lineText = `${previousLineText} ${lineText}`;
 
       const translationFunctions = getTranslationFunctions();
-      const translationRegex = getTranslationRegex(document.languageId, translationFunctions);
+      const translationRegex = getTranslationRegex(
+        document.languageId,
+        translationFunctions,
+      );
       const translationMatches = lineText.match(translationRegex);
 
       if (translationMatches) {
-        const { translationKey } = extractTranslationKey(translationMatches, document.languageId);
+        const {translationKey} = extractTranslationKey(
+          translationMatches,
+          document.languageId,
+        );
 
-        const reversedEntriesToUse: ReversedTranslationKeyEntry[] = reversedTranslationKeyEntries.length > 0
-          ? reversedTranslationKeyEntries
-          : reversedTranslationKeys.map((entry) => {
-            const [value, key] = Object.entries(entry)[0];
-            return {
-              value,
-              key,
-              namespace: undefined,
-            };
-          });
+        const reversedEntriesToUse: ReversedTranslationKeyEntry[] =
+          reversedTranslationKeyEntries.length > 0
+            ? reversedTranslationKeyEntries
+            : reversedTranslationKeys.map((entry) => {
+                const [value, key] = Object.entries(entry)[0];
+                return {
+                  value,
+                  key,
+                  namespace: undefined,
+                };
+              });
 
         const rankedReversedEntries = rankByNamespaceMatch(
-          reversedEntriesToUse.filter((entry) => matchesReversedEntry(entry, translationKey)),
+          reversedEntriesToUse.filter((entry) =>
+            matchesReversedEntry(entry, translationKey),
+          ),
           translationKey,
         );
 

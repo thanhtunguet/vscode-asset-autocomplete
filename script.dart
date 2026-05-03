@@ -102,10 +102,9 @@ Future<void> generateDartCode(String inputDir, String outputFile) async {
     exit(1);
   }
 
-  final localeFiles = assetsDir
-      .listSync()
-      .whereType<File>()
-      .where((file) => file.path.endsWith('.json'));
+  final localeFiles = assetsDir.listSync().whereType<File>().where(
+    (file) => file.path.endsWith('.json'),
+  );
 
   final allTranslations = <String, Map<String, dynamic>>{};
 
@@ -124,7 +123,9 @@ Future<void> generateDartCode(String inputDir, String outputFile) async {
   output.writeln('// GENERATED FILE, DO NOT EDIT');
   output.writeln('// ignore_for_file: constant_identifier_names');
   output.writeln('');
-  output.writeln('const Map<String, Map<String, dynamic>> supaTranslations = {');
+  output.writeln(
+    'const Map<String, Map<String, dynamic>> supaTranslations = {',
+  );
 
   allTranslations.forEach((locale, translations) {
     output.writeln("  '$locale': {");
@@ -153,18 +154,19 @@ Future<void> mergeTranslations() async {
     log.warning('Directory assets/i18n not found.');
     exit(1);
   }
-  final List<Directory> localeDirs =
-      assetsDir.listSync().whereType<Directory>().toList();
+  final List<Directory> localeDirs = assetsDir
+      .listSync()
+      .whereType<Directory>()
+      .toList();
 
   for (var localeDir in localeDirs) {
     final locale = localeDir.path.split(Platform.pathSeparator).last;
     final mergedMap = <String, dynamic>{};
 
     // Process each JSON file in the locale subdirectory.
-    final jsonFiles = localeDir
-        .listSync()
-        .whereType<File>()
-        .where((file) => file.path.endsWith('.json'));
+    final jsonFiles = localeDir.listSync().whereType<File>().where(
+      (file) => file.path.endsWith('.json'),
+    );
 
     for (var file in jsonFiles) {
       final filename = file.uri.pathSegments.last;
@@ -182,10 +184,12 @@ Future<void> mergeTranslations() async {
       }
     }
     final mergedFile = File('assets/i18n/$locale.json');
-    mergedFile
-        .writeAsStringSync(JsonEncoder.withIndent('  ').convert(mergedMap));
+    mergedFile.writeAsStringSync(
+      JsonEncoder.withIndent('  ').convert(mergedMap),
+    );
     log.info(
-        'Merged translations for locale "$locale" into ${mergedFile.path}');
+      'Merged translations for locale "$locale" into ${mergedFile.path}',
+    );
   }
 }
 
@@ -194,7 +198,11 @@ Future<void> mergeTranslations() async {
 /// If a namespace file doesn't exist, it will be created. Any missing key is
 /// added with an empty string value. Optionally removes orphan keys and reorders the result.
 Future<void> extractMissingKeys(
-    String locale, String sourceDir, bool removeOrphans, bool reorder) async {
+  String locale,
+  String sourceDir,
+  bool removeOrphans,
+  bool reorder,
+) async {
   // Recursively search for Dart files.
   final dir = Directory(sourceDir);
   if (!dir.existsSync()) {
@@ -205,7 +213,8 @@ Future<void> extractMissingKeys(
   final Set<String> keysFound = {};
   // Regex pattern to capture translate('key') usages.
   final regex = RegExp(
-      r"translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^}]*\})?\s*\)");
+    r"translate\s*\(\s*'([A-Za-z0-9$\{\}\.]+)'\s*(?:,\s*\{[^}]*\})?\s*\)",
+  );
 
   await for (var entity in dir.list(recursive: true, followLinks: false)) {
     if (entity is File && entity.path.endsWith('.dart')) {
@@ -238,7 +247,8 @@ Future<void> extractMissingKeys(
   final localeDir = Directory('assets/i18n/$locale');
   if (!localeDir.existsSync()) {
     log.severe(
-        'Locale directory "assets/i18n/$locale" does not exist. Creating...');
+      'Locale directory "assets/i18n/$locale" does not exist. Creating...',
+    );
     localeDir.createSync(recursive: true);
   }
 
@@ -269,8 +279,9 @@ Future<void> extractMissingKeys(
 
     // Handle orphan keys removal if enabled
     if (removeOrphans) {
-      final orphanKeys =
-          jsonMap.keys.where((key) => !keys.contains(key)).toList();
+      final orphanKeys = jsonMap.keys
+          .where((key) => !keys.contains(key))
+          .toList();
       for (final orphanKey in orphanKeys) {
         jsonMap.remove(orphanKey);
         updated = true;
@@ -290,7 +301,8 @@ Future<void> extractMissingKeys(
     // Sort keys if reordering is enabled
     if (reorder && jsonMap.isNotEmpty) {
       final sortedMap = Map.fromEntries(
-          jsonMap.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+        jsonMap.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+      );
       jsonMap = sortedMap;
       updated = true;
       log.fine('Reordered keys in "$filePath".');
@@ -318,10 +330,9 @@ Future<void> reorderTranslationKeys() async {
   int processedFiles = 0;
 
   // Process all JSON files directly in assets/i18n (merged locale files)
-  final rootFiles = assetsDir
-      .listSync()
-      .whereType<File>()
-      .where((file) => file.path.endsWith('.json'));
+  final rootFiles = assetsDir.listSync().whereType<File>().where(
+    (file) => file.path.endsWith('.json'),
+  );
 
   for (var file in rootFiles) {
     await _reorderKeysInFile(file);
@@ -332,10 +343,9 @@ Future<void> reorderTranslationKeys() async {
   final localeDirs = assetsDir.listSync().whereType<Directory>().toList();
 
   for (var localeDir in localeDirs) {
-    final jsonFiles = localeDir
-        .listSync()
-        .whereType<File>()
-        .where((file) => file.path.endsWith('.json'));
+    final jsonFiles = localeDir.listSync().whereType<File>().where(
+      (file) => file.path.endsWith('.json'),
+    );
 
     for (var file in jsonFiles) {
       await _reorderKeysInFile(file);
@@ -359,7 +369,8 @@ Future<void> _reorderKeysInFile(File file) async {
 
     // Create a new map with sorted keys
     final sortedMap = Map.fromEntries(
-        jsonMap.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+      jsonMap.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+    );
 
     // Write sorted map back to file
     await file.writeAsString(JsonEncoder.withIndent('  ').convert(sortedMap));

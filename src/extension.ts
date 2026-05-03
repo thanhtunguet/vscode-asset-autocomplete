@@ -93,11 +93,16 @@ function createLocaleFileMatcher(
     return undefined;
   }
 
-  const localeFileRegex = buildLocaleFileRegex(currentWorkspaceConfig.localeFilePattern);
-  const normalizedI18nPath = normalizeFsPath(path.resolve(currentWorkspaceConfig.i18nPath));
+  const localeFileRegex = buildLocaleFileRegex(
+    currentWorkspaceConfig.localeFilePattern,
+  );
+  const normalizedI18nPath = normalizeFsPath(
+    path.resolve(currentWorkspaceConfig.i18nPath),
+  );
   const i18nPrefix = `${normalizedI18nPath}/`;
 
-  const configuredLanguages = vscode.workspace.getConfiguration('i18n-autocomplete')
+  const configuredLanguages = vscode.workspace
+    .getConfiguration('i18n-autocomplete')
     .get<string[]>('languages', ['en', 'vi'])
     .map((language) => language.trim().toLowerCase())
     .filter(Boolean);
@@ -184,7 +189,7 @@ function setupTranslationAutoReload(
   if (rawReloadIntervalMs > 0 && rawReloadIntervalMs < MIN_RELOAD_INTERVAL_MS) {
     showLog(
       `reloadIntervalMs=${rawReloadIntervalMs} is below minimum ${MIN_RELOAD_INTERVAL_MS}. ` +
-      `Using ${MIN_RELOAD_INTERVAL_MS}ms.`,
+        `Using ${MIN_RELOAD_INTERVAL_MS}ms.`,
     );
   }
 
@@ -196,33 +201,48 @@ function setupTranslationAutoReload(
       .replace(/\/+$/, '');
 
     if (!normalizedI18nPathSetting) {
-      showLog('Auto reload on save is enabled but jsonPath is empty. Skipping file watcher setup.');
+      showLog(
+        'Auto reload on save is enabled but jsonPath is empty. Skipping file watcher setup.',
+      );
     } else {
-    const watchPattern = new vscode.RelativePattern(
-      workspaceFolder,
-      `${normalizedI18nPathSetting}/**/*`,
-    );
+      const watchPattern = new vscode.RelativePattern(
+        workspaceFolder,
+        `${normalizedI18nPathSetting}/**/*`,
+      );
 
-    translationFileWatcher = vscode.workspace.createFileSystemWatcher(watchPattern);
+      translationFileWatcher =
+        vscode.workspace.createFileSystemWatcher(watchPattern);
 
-    const queueReload = (reason: string, uri: vscode.Uri) => {
-      if (localeFileMatcher && !localeFileMatcher(uri)) {
-        return;
-      }
+      const queueReload = (reason: string, uri: vscode.Uri) => {
+        if (localeFileMatcher && !localeFileMatcher(uri)) {
+          return;
+        }
 
-      if (translationReloadDebounceTimeout) {
-        clearTimeout(translationReloadDebounceTimeout);
-      }
+        if (translationReloadDebounceTimeout) {
+          clearTimeout(translationReloadDebounceTimeout);
+        }
 
-      translationReloadDebounceTimeout = setTimeout(() => {
-        triggerTranslationReload(workspacePath, reason);
-      }, TRANSLATION_RELOAD_DEBOUNCE_MS);
-    };
+        translationReloadDebounceTimeout = setTimeout(() => {
+          triggerTranslationReload(workspacePath, reason);
+        }, TRANSLATION_RELOAD_DEBOUNCE_MS);
+      };
 
-    translationFileWatcher.onDidChange((uri) => queueReload('file change', uri), null, context.subscriptions);
-    translationFileWatcher.onDidCreate((uri) => queueReload('file create', uri), null, context.subscriptions);
-    translationFileWatcher.onDidDelete((uri) => queueReload('file delete', uri), null, context.subscriptions);
-    context.subscriptions.push(translationFileWatcher);
+      translationFileWatcher.onDidChange(
+        (uri) => queueReload('file change', uri),
+        null,
+        context.subscriptions,
+      );
+      translationFileWatcher.onDidCreate(
+        (uri) => queueReload('file create', uri),
+        null,
+        context.subscriptions,
+      );
+      translationFileWatcher.onDidDelete(
+        (uri) => queueReload('file delete', uri),
+        null,
+        context.subscriptions,
+      );
+      context.subscriptions.push(translationFileWatcher);
     }
   }
 
@@ -246,43 +266,47 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register commands
 
-
   registerNativeExtractionCommands(context, workspaceFolder);
   registerJsonSortCommands(context, workspaceFolder);
 
   // Get workspace configuration
   const config = getWorkspaceConfig(workspacePath);
-  
+
   if (!config) {
     return;
   }
-  
-  const { projectType, assetPathSetting } = config;
+
+  const {projectType, assetPathSetting} = config;
 
   // Show detected project type
   vscode.window.showInformationMessage(`Detected project type: ${projectType}`);
-  
+
   // Load translation keys
   const translationsLoaded = loadTranslationKeys(workspacePath);
-  
+
   if (!translationsLoaded) {
     return;
   }
 
   setupTranslationAutoReload(context, workspaceFolder, workspacePath);
-  configChangeDisposable = vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration('i18n-autocomplete')) {
-      setupTranslationAutoReload(context, workspaceFolder, workspacePath);
-      triggerTranslationReload(workspacePath, 'configuration change');
-    }
-  });
+  configChangeDisposable = vscode.workspace.onDidChangeConfiguration(
+    (event) => {
+      if (event.affectsConfiguration('i18n-autocomplete')) {
+        setupTranslationAutoReload(context, workspaceFolder, workspacePath);
+        triggerTranslationReload(workspacePath, 'configuration change');
+      }
+    },
+  );
   context.subscriptions.push(configChangeDisposable);
-  
+
   // Load asset files
   const assetFiles = loadAssetFiles(workspacePath, assetPathSetting);
 
   // Register completion provider
-  const completionProvider = createCompletionProvider(assetFiles, assetPathSetting);
+  const completionProvider = createCompletionProvider(
+    assetFiles,
+    assetPathSetting,
+  );
 
   dartDisposableProvider = vscode.languages.registerCompletionItemProvider(
     'dart',

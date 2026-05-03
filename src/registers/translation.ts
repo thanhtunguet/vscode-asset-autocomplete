@@ -1,20 +1,20 @@
 import * as fs from 'fs';
 import path from 'path';
-import { showLog } from '../helpers/log';
+import {showLog} from '../helpers/log';
 import {
   translationSubject,
   type ReversedTranslationKeyEntry,
   type TranslationKeyEntry,
 } from '../extension';
 import vscode from 'vscode';
-import { detectProjectType } from '../helpers/project_type';
-import { ProjectType } from '../types/ProjectType';
-import { ExtensionConfig } from '../types/ExtensionConfig';
+import {detectProjectType} from '../helpers/project_type';
+import {ProjectType} from '../types/ProjectType';
+import {ExtensionConfig} from '../types/ExtensionConfig';
 
 /**
  * Get default paths based on project type
  */
-export function getDefaultPaths(projectType: ProjectType): { 
+export function getDefaultPaths(projectType: ProjectType): {
   defaultLocalizationPath: string;
   defaultAssetPath: string;
 } {
@@ -30,7 +30,7 @@ export function getDefaultPaths(projectType: ProjectType): {
         defaultLocalizationPath: 'src/locales',
         defaultAssetPath: 'src/assets',
       };
-      
+
     default:
       return {
         defaultLocalizationPath: '',
@@ -80,7 +80,7 @@ function parseLocaleJsonFile(filePath: string): any | null {
 function extractKeyValuePairs(
   obj: any,
   prefix: string,
-  pairs: Array<{ key: string; value: string }>,
+  pairs: Array<{key: string; value: string}>,
 ): void {
   for (const key in obj) {
     const value = obj[key];
@@ -177,7 +177,8 @@ function getLocaleFiles(
   localeFileRegex: RegExp,
 ): LocaleFileEntry[] {
   if (mode === 'single') {
-    return fs.readdirSync(i18nPath)
+    return fs
+      .readdirSync(i18nPath)
       .filter((file) => localeFileRegex.test(file))
       .map((file) => {
         const locale = path.basename(file, path.extname(file));
@@ -197,7 +198,8 @@ function getLocaleFiles(
       return;
     }
 
-    const filesInLocale = fs.readdirSync(localeDir)
+    const filesInLocale = fs
+      .readdirSync(localeDir)
       .filter((file) => localeFileRegex.test(file))
       .map((file) => ({
         filePath: path.join(localeDir, file),
@@ -214,18 +216,19 @@ function getLocaleFiles(
 export function getWorkspaceConfig(workspacePath: string) {
   const config = vscode.workspace.getConfiguration('i18n-autocomplete');
   const projectType = detectProjectType(workspacePath);
-  
+
   if (projectType === ProjectType.Unknown) {
     return null;
   }
-  
-  const { defaultLocalizationPath, defaultAssetPath } = getDefaultPaths(projectType);
-  
+
+  const {defaultLocalizationPath, defaultAssetPath} =
+    getDefaultPaths(projectType);
+
   const i18nPathSetting = config.get<string>(
     nameof(ExtensionConfig.prototype.jsonPath),
     defaultLocalizationPath,
   );
-  
+
   const assetPathSetting = config.get<string>(
     nameof(ExtensionConfig.prototype.assetPath),
     defaultAssetPath,
@@ -250,9 +253,9 @@ export function getWorkspaceConfig(workspacePath: string) {
     nameof(ExtensionConfig.prototype.preferredTranslationLanguage),
     '',
   );
-  
+
   const i18nPath = path.join(workspacePath, i18nPathSetting);
-  
+
   return {
     projectType,
     i18nPath,
@@ -271,11 +274,11 @@ export function getWorkspaceConfig(workspacePath: string) {
  */
 export function loadTranslationKeys(workspacePath: string): boolean {
   const config = getWorkspaceConfig(workspacePath);
-  
+
   if (!config) {
     return false;
   }
-  
+
   const {
     i18nPath,
     localeFileMode,
@@ -283,32 +286,43 @@ export function loadTranslationKeys(workspacePath: string): boolean {
     multipleModeConcatNamespace,
     preferredTranslationLanguage,
   } = config;
-  
+
   if (!fs.existsSync(i18nPath)) {
     // Project does not need i18n
     return false;
   }
 
-  const workspaceConfig = vscode.workspace.getConfiguration('i18n-autocomplete');
+  const workspaceConfig =
+    vscode.workspace.getConfiguration('i18n-autocomplete');
   const languages = workspaceConfig.get<string[]>(
     nameof(ExtensionConfig.prototype.languages),
     ['en', 'vi'],
   );
 
   const localeFileRegex = buildLocaleFileRegex(localeFilePattern);
-  const localeFiles = getLocaleFiles(i18nPath, languages, localeFileMode, localeFileRegex);
-  
+  const localeFiles = getLocaleFiles(
+    i18nPath,
+    languages,
+    localeFileMode,
+    localeFileRegex,
+  );
+
   if (localeFiles.length === 0) {
-    showLog(`No translation files found in directory: ${i18nPath} (mode: ${localeFileMode}, pattern: ${localeFilePattern})`);
+    showLog(
+      `No translation files found in directory: ${i18nPath} (mode: ${localeFileMode}, pattern: ${localeFilePattern})`,
+    );
     return false;
   }
-  
+
   const translationKeys: string[] = [];
   const reversedTranslationKeys: Record<string, string>[] = [];
   const translationKeyEntries: TranslationKeyEntry[] = [];
   const reversedTranslationKeyEntries: ReversedTranslationKeyEntry[] = [];
 
-  const distinctKeyMap = new Map<string, { namespace?: string; translationsByLocale: Map<string, string> }>();
+  const distinctKeyMap = new Map<
+    string,
+    {namespace?: string; translationsByLocale: Map<string, string>}
+  >();
   const discoveredLocales: string[] = [];
 
   localeFiles.forEach((entry) => {
@@ -321,10 +335,10 @@ export function loadTranslationKeys(workspacePath: string): boolean {
       return;
     }
 
-    const pairs: Array<{ key: string; value: string }> = [];
+    const pairs: Array<{key: string; value: string}> = [];
     extractKeyValuePairs(json, '', pairs);
 
-    pairs.forEach(({ key, value }) => {
+    pairs.forEach(({key, value}) => {
       const finalKey = applyNamespaceStrategy(
         key,
         entry.namespace,
@@ -346,10 +360,17 @@ export function loadTranslationKeys(workspacePath: string): boolean {
     });
   });
 
-  const localePriority = buildLocalePriority(preferredTranslationLanguage, languages, discoveredLocales);
+  const localePriority = buildLocalePriority(
+    preferredTranslationLanguage,
+    languages,
+    discoveredLocales,
+  );
 
   distinctKeyMap.forEach((entry, key) => {
-    const preferredValue = pickPreferredTranslation(entry.translationsByLocale, localePriority);
+    const preferredValue = pickPreferredTranslation(
+      entry.translationsByLocale,
+      localePriority,
+    );
 
     translationKeys.push(key);
     translationKeyEntries.push({
@@ -357,14 +378,14 @@ export function loadTranslationKeys(workspacePath: string): boolean {
       namespace: entry.namespace,
     });
 
-    reversedTranslationKeys.push({ [preferredValue]: key });
+    reversedTranslationKeys.push({[preferredValue]: key});
     reversedTranslationKeyEntries.push({
       value: preferredValue,
       key,
       namespace: entry.namespace,
     });
   });
-  
+
   translationSubject.next({
     translationKeys,
     reversedTranslationKeys,
@@ -373,6 +394,6 @@ export function loadTranslationKeys(workspacePath: string): boolean {
     localeFileMode,
     multipleModeConcatNamespace,
   });
-  
+
   return true;
 }

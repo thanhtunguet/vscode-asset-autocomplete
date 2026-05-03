@@ -5,7 +5,10 @@ import * as vscode from 'vscode';
 export class JsonSortService {
   constructor(private workspacePath: string) {}
 
-  async sortAllJsonTranslationFiles(): Promise<{totalFiles: number; sortedFiles: number}> {
+  public async sortAllJsonTranslationFiles(): Promise<{
+    totalFiles: number;
+    sortedFiles: number;
+  }> {
     const translationDirs = this.getTranslationDirectories();
     let totalFiles = 0;
     let sortedFiles = 0;
@@ -13,10 +16,12 @@ export class JsonSortService {
     for (const dir of translationDirs) {
       if (fs.existsSync(dir)) {
         const files = fs.readdirSync(dir);
-        const jsonFiles = files.filter(file => file.endsWith('.json'));
-        
+        const jsonFiles = files.filter((file: string) =>
+          file.endsWith('.json'),
+        );
+
         totalFiles += jsonFiles.length;
-        
+
         for (const file of jsonFiles) {
           const filePath = path.join(dir, file);
           try {
@@ -24,38 +29,42 @@ export class JsonSortService {
               sortedFiles++;
             }
           } catch (error) {
-            vscode.window.showWarningMessage(`Failed to sort ${file}: ${error instanceof Error ? error.message : String(error)}`);
+            vscode.window.showWarningMessage(
+              `Failed to sort ${file}: ${error instanceof Error ? error.message : String(error)}`,
+            );
           }
         }
       }
     }
 
-    return { totalFiles, sortedFiles };
+    return {totalFiles, sortedFiles};
   }
 
   private async sortJsonFile(filePath: string): Promise<boolean> {
     try {
       // Read the file
       const content = fs.readFileSync(filePath, 'utf8');
-      
+
       // Parse JSON
       const jsonData = JSON.parse(content);
-      
+
       // Sort the object recursively
       const sortedData = this.sortObjectRecursively(jsonData);
-      
+
       // Convert back to JSON with proper formatting
       const sortedContent = JSON.stringify(sortedData, null, 2) + '\n';
-      
+
       // Only write if content changed
       if (content !== sortedContent) {
         fs.writeFileSync(filePath, sortedContent, 'utf8');
         return true;
       }
-      
+
       return false;
     } catch (error) {
-      throw new Error(`Error sorting ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Error sorting ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -63,25 +72,25 @@ export class JsonSortService {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
-    
+
     if (Array.isArray(obj)) {
-      return obj.map(item => this.sortObjectRecursively(item));
+      return obj.map((item) => this.sortObjectRecursively(item));
     }
-    
+
     // Sort object keys
     const sortedKeys = Object.keys(obj).sort();
     const sortedObject: any = {};
-    
+
     for (const key of sortedKeys) {
       sortedObject[key] = this.sortObjectRecursively(obj[key]);
     }
-    
+
     return sortedObject;
   }
 
   private getTranslationDirectories(): string[] {
     const dirs: string[] = [];
-    
+
     // Common translation directory patterns
     const commonPaths = [
       'locales',
@@ -99,7 +108,7 @@ export class JsonSortService {
       'assets/translations',
       'public/locales',
       'public/i18n',
-      'public/translations'
+      'public/translations',
     ];
 
     for (const relativePath of commonPaths) {

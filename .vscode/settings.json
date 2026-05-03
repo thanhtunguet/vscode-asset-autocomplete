@@ -10,5 +10,7 @@
 	},
 	// Turn off tsc task auto detection since we have the necessary tasks as npm scripts
 	"typescript.tsc.autoDetect": "off",
-	"eslint.format.enable": true
+	"eslint.format.enable": true,
+	"editor.tabSize": 2,
+	"prettier.tabWidth": 2
 }

@@ -1,5 +1,5 @@
-import type { LanguageConfig } from '../types/ExtensionConfig';
-import type { ScanResult } from './file_scanner';
+import type {LanguageConfig} from '../types/ExtensionConfig';
+import type {ScanResult} from './file_scanner';
 
 export interface ExtractedTranslation {
   key: string;
@@ -24,7 +24,7 @@ export abstract class BaseTranslationExtractor {
   }
 
   public abstract extractFromFiles(files: ScanResult[]): ExtractionResult;
-  
+
   protected abstract getRegexPattern(): RegExp;
 
   protected getTranslationFunctionNames(): string[] {
@@ -33,7 +33,7 @@ export abstract class BaseTranslationExtractor {
       return ['t', 'translate'];
     }
 
-    return configured.map(name => name.trim()).filter(Boolean);
+    return configured.map((name) => name.trim()).filter(Boolean);
   }
 
   protected escapeRegex(value: string): string {
@@ -43,7 +43,10 @@ export abstract class BaseTranslationExtractor {
   /**
    * Extract translations from file content using regex
    */
-  protected extractFromContent(content: string, filePath: string): ExtractedTranslation[] {
+  protected extractFromContent(
+    content: string,
+    filePath: string,
+  ): ExtractedTranslation[] {
     const regex = this.getRegexPattern();
     const translations: ExtractedTranslation[] = [];
     let match;
@@ -92,7 +95,7 @@ export class DartTranslationExtractor extends BaseTranslationExtractor {
     }
 
     const functionPattern = this.getTranslationFunctionNames()
-      .map(name => this.escapeRegex(name))
+      .map((name) => this.escapeRegex(name))
       .join('|');
 
     // Enhanced Dart pattern to handle optional second argument (map):
@@ -101,7 +104,10 @@ export class DartTranslationExtractor extends BaseTranslationExtractor {
     // t('key', {})
     // translate('key', {'param': value})
     // translate('key', {'param': value, 'other': otherValue})
-    return new RegExp(`\\b(?:${functionPattern})\\s*\\(\\s*'([A-Za-z0-9$\\{\\}\\.]+)'\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`, 'g');
+    return new RegExp(
+      `\\b(?:${functionPattern})\\s*\\(\\s*'([A-Za-z0-9$\\{\\}\\.]+)'\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`,
+      'g',
+    );
   }
 
   protected extractKey(match: RegExpExecArray): string | null {
@@ -110,17 +116,21 @@ export class DartTranslationExtractor extends BaseTranslationExtractor {
   }
 
   public extractFromFiles(files: ScanResult[]): ExtractionResult {
-    const dartFiles = files.filter(f => f.languageType === 'dart');
+    const dartFiles = files.filter((f) => f.languageType === 'dart');
     let allTranslations: ExtractedTranslation[] = [];
 
-    dartFiles.forEach(file => {
-      const translations = this.extractFromContent(file.content, file.relativePath);
+    dartFiles.forEach((file) => {
+      const translations = this.extractFromContent(
+        file.content,
+        file.relativePath,
+      );
       allTranslations.push(...translations);
     });
 
     // Remove duplicates based on key
-    const uniqueTranslations = allTranslations.filter((translation, index, array) => 
-      array.findIndex(t => t.key === translation.key) === index,
+    const uniqueTranslations = allTranslations.filter(
+      (translation, index, array) =>
+        array.findIndex((t) => t.key === translation.key) === index,
     );
 
     return {
@@ -143,17 +153,20 @@ export class TypeScriptTranslationExtractor extends BaseTranslationExtractor {
     }
 
     const functionPattern = this.getTranslationFunctionNames()
-      .map(name => this.escapeRegex(name))
+      .map((name) => this.escapeRegex(name))
       .join('|');
 
     // Enhanced TypeScript/JavaScript pattern to handle optional second argument (object):
     // Examples:
     // t('key'), translate('key')
-    // t("key"), translate("key") 
+    // t("key"), translate("key")
     // t(`key`), translate(`key`)
     // t('key', {}), translate('key', {})
     // t('key', {param: value}), translate('key', {param: value, other: 'test'})
-    return new RegExp(`\\b(?:${functionPattern})\\s*\\(\\s*(['"\`])([^'"\`]+)\\1\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`, 'g');
+    return new RegExp(
+      `\\b(?:${functionPattern})\\s*\\(\\s*(['"\`])([^'"\`]+)\\1\\s*(?:,\\s*\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\})?\\s*\\)`,
+      'g',
+    );
   }
 
   protected extractKey(match: RegExpExecArray): string | null {
@@ -162,19 +175,23 @@ export class TypeScriptTranslationExtractor extends BaseTranslationExtractor {
   }
 
   public extractFromFiles(files: ScanResult[]): ExtractionResult {
-    const tsJsFiles = files.filter(f => 
-      f.languageType === 'typescript' || f.languageType === 'javascript',
+    const tsJsFiles = files.filter(
+      (f) => f.languageType === 'typescript' || f.languageType === 'javascript',
     );
     let allTranslations: ExtractedTranslation[] = [];
 
-    tsJsFiles.forEach(file => {
-      const translations = this.extractFromContent(file.content, file.relativePath);
+    tsJsFiles.forEach((file) => {
+      const translations = this.extractFromContent(
+        file.content,
+        file.relativePath,
+      );
       allTranslations.push(...translations);
     });
 
     // Remove duplicates based on key
-    const uniqueTranslations = allTranslations.filter((translation, index, array) => 
-      array.findIndex(t => t.key === translation.key) === index,
+    const uniqueTranslations = allTranslations.filter(
+      (translation, index, array) =>
+        array.findIndex((t) => t.key === translation.key) === index,
     );
 
     return {
@@ -191,7 +208,7 @@ export class TypeScriptTranslationExtractor extends BaseTranslationExtractor {
  */
 export class TranslationExtractorFactory {
   public static createExtractor(
-    languageConfig: LanguageConfig, 
+    languageConfig: LanguageConfig,
     projectType: 'dart' | 'typescript',
   ): BaseTranslationExtractor {
     switch (projectType) {

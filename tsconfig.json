@@ -12,6 +12,9 @@
 		"typeRoots": [
 			"node_modules/@types"
 		],
+		"types": [
+			"node"
+		],
 		"plugins": [
 			{
 				"name": "@typescript-nameof/nameof"
