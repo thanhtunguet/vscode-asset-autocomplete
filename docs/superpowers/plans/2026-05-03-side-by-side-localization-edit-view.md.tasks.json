@@ -1,0 +1,26 @@
+{
+  "planPath": "docs/superpowers/plans/2026-05-03-side-by-side-localization-edit-view.md",
+  "tasks": [
+    {
+      "id": 13,
+      "subject": "Task 1: Implement service with tests",
+      "status": "pending",
+      "description": "**Goal:** Add a tested `SideBySideTranslationService` that discovers side-by-side localization file batches and creates missing files as `{}`.\n\n**Files:**\n- Create: `src/services/side_by_side_translation_service.ts`\n- Create: `src/test/side_by_side_translation_service.test.ts`\n\n**Acceptance Criteria:**\n- [ ] `single` mode returns one batch with one file per selected language.\n- [ ] `multiple` mode returns the sorted union of matching namespace files across selected language folders.\n- [ ] `localeFilePattern` supports glob-like patterns and regex literals, and invalid regex literals fail clearly.\n- [ ] Missing files are created as `{}` with parent directories.\n\n**Verify:** `yarn run compile-tests` → TypeScript test compilation succeeds.\n\n**Steps:** Write failing service tests first, implement the service, rerun compile-tests, and do not commit unless explicitly asked.\n\n```json:metadata\n{\"files\":[\"src/services/side_by_side_translation_service.ts\",\"src/test/side_by_side_translation_service.test.ts\"],\"verifyCommand\":\"yarn run compile-tests\",\"acceptanceCriteria\":[\"single mode returns one batch\",\"multiple mode namespace union is sorted\",\"localeFilePattern filters and invalid regex fails\",\"missing files created as {}\"]}\n```"
+    },
+    {
+      "id": 15,
+      "subject": "Task 2: Register side-by-side command",
+      "status": "pending",
+      "blockedBy": [13],
+      "description": "**Goal:** Add the VS Code command flow that prompts for 2–3 languages/files and opens selected batches in native editor columns.\n\n**Files:**\n- Create: `src/registers/side_by_side_translation_commands.ts`\n- Modify: `src/extension.ts`\n- Modify: `package.json`\n\n**Acceptance Criteria:**\n- [ ] Command id `i18n-autocomplete.openSideBySideTranslations` is registered and contributed.\n- [ ] Command Palette label is `I18n: Open Side-by-Side Translation Files`.\n- [ ] Language QuickPick requires 2–3 configured languages.\n- [ ] File/namespace QuickPick defaults all batches selected when multiple choices exist.\n- [ ] Selected files open in `ViewColumn.One`, `ViewColumn.Two`, and `ViewColumn.Three`.\n\n**Verify:** `yarn run compile-tests && yarn run lint && yarn run compile` → all commands succeed.\n\n**Steps:** Run GitNexus impact before modifying `activate`, implement registration/wiring, run verification, and do not commit unless explicitly asked.\n\n```json:metadata\n{\"files\":[\"src/registers/side_by_side_translation_commands.ts\",\"src/extension.ts\",\"package.json\"],\"verifyCommand\":\"yarn run compile-tests && yarn run lint && yarn run compile\",\"acceptanceCriteria\":[\"command registered and contributed\",\"2-3 language selection\",\"all batches selected by default\",\"native editor columns 1-3\"]}\n```"
+    },
+    {
+      "id": 14,
+      "subject": "Task 3: Verify side-by-side feature scope",
+      "status": "pending",
+      "blockedBy": [13, 15],
+      "description": "**Goal:** Run final checks and GitNexus change analysis to confirm the implementation matches the approved design.\n\n**Files:**\n- Analyze: all changed files\n\n**Acceptance Criteria:**\n- [ ] `yarn run compile-tests` passes.\n- [ ] `yarn run lint` passes.\n- [ ] `yarn run compile` passes.\n- [ ] `gitnexus_detect_changes({scope: 'all'})` shows only expected side-by-side service, command, package, and test changes.\n\n**Verify:** `yarn run compile-tests && yarn run lint && yarn run compile` plus GitNexus detect changes.\n\n**Steps:** Run verification commands, inspect GitNexus affected scope, fix only issues directly related to this feature, and do not commit unless explicitly asked.\n\n```json:metadata\n{\"files\":[],\"verifyCommand\":\"yarn run compile-tests && yarn run lint && yarn run compile\",\"acceptanceCriteria\":[\"compile-tests passes\",\"lint passes\",\"compile passes\",\"GitNexus changed scope matches feature\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-05-03T00:00:00.000Z"
+}

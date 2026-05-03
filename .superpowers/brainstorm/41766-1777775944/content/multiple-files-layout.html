@@ -1,0 +1,84 @@
+<h2>Multiple namespace/file layout</h2>
+<p class="subtitle">You said: compare all by default, allow dropdown selection, and if multiple files are chosen, show them sequentially and vertically. These are the practical layout choices.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">A. Native columns + tabs</div>
+        <div class="mockup-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;">
+            <div style="border:1px solid #bbb;border-radius:4px;overflow:hidden;">
+              <div style="background:#e5e7eb;padding:5px;font-weight:bold;">en</div>
+              <div style="display:flex;gap:2px;background:#f3f4f6;padding:4px;"><span>home.json</span><span>common.json</span></div>
+              <pre style="margin:0;padding:8px;min-height:120px;">{
+  "title": "Home"
+}</pre>
+            </div>
+            <div style="border:1px solid #bbb;border-radius:4px;overflow:hidden;">
+              <div style="background:#e5e7eb;padding:5px;font-weight:bold;">vi</div>
+              <div style="display:flex;gap:2px;background:#f3f4f6;padding:4px;"><span>home.json</span><span>common.json</span></div>
+              <pre style="margin:0;padding:8px;min-height:120px;">{
+  "title": "Trang chủ"
+}</pre>
+            </div>
+            <div style="border:1px solid #bbb;border-radius:4px;overflow:hidden;">
+              <div style="background:#e5e7eb;padding:5px;font-weight:bold;">fr</div>
+              <div style="display:flex;gap:2px;background:#f3f4f6;padding:4px;"><span>home.json</span><span>common.json</span></div>
+              <pre style="margin:0;padding:8px;min-height:120px;">{
+  "title": "Accueil"
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Recommended: native editor columns, files as tabs</h3>
+      <p>Each selected language gets one editor column. Multiple selected namespace files open as tabs inside each language column. Best match for native VS Code editing.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">B. Vertical namespace batches</div>
+        <div class="mockup-body">
+          <div style="display:grid;grid-template-columns:1fr;gap:10px;font-size:12px;">
+            <div style="border:1px solid #bbb;border-radius:4px;padding:6px;">
+              <strong>home.json</strong>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;"><pre>{ en }</pre><pre>{ vi }</pre><pre>{ fr }</pre></div>
+            </div>
+            <div style="border:1px solid #bbb;border-radius:4px;padding:6px;">
+              <strong>common.json</strong>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;"><pre>{ en }</pre><pre>{ vi }</pre><pre>{ fr }</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. True vertical rows</h3>
+      <p>Each namespace is a vertical row, each language is a column. This matches your wording best, but likely requires a custom webview or more fragile editor layout commands.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">C. Sequential open order</div>
+        <div class="mockup-body">
+          <ol style="font-size:13px;line-height:1.8;">
+            <li>Open home.json: en | vi | fr</li>
+            <li>Then open common.json: en | vi | fr</li>
+            <li>Then open auth.json: en | vi | fr</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Sequential batches only</h3>
+      <p>Open each namespace batch one after another in native columns. Simple, but the final visible layout may only show the last batch prominently.</p>
+    </div>
+  </div>
+</div>
