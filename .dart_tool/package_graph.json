@@ -1,0 +1,33 @@
+{
+  "roots": [
+    "supa_l10n_manager"
+  ],
+  "packages": [
+    {
+      "name": "supa_l10n_manager",
+      "version": "0.1.0",
+      "dependencies": [
+        "args",
+        "logging",
+        "path"
+      ],
+      "devDependencies": []
+    },
+    {
+      "name": "path",
+      "version": "1.9.1",
+      "dependencies": []
+    },
+    {
+      "name": "logging",
+      "version": "1.3.0",
+      "dependencies": []
+    },
+    {
+      "name": "args",
+      "version": "2.7.0",
+      "dependencies": []
+    }
+  ],
+  "configVersion": 1
+}
